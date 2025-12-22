@@ -11,8 +11,10 @@ import io
 import chess.pgn
 import stat
 
-# Ensure the local chessAI package can be imported
-sys.path.append(os.getcwd())
+# Ensure the current directory is in the python path
+base_dir = os.path.dirname(os.path.abspath(__file__))
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
 
 # Try to handle Windows Loop Policy for Stockfish
 if sys.platform == 'win32':
@@ -21,12 +23,9 @@ if sys.platform == 'win32':
     except Exception:
         pass
 
-# Import your package
-try:
-    from chessAI.analyzer import ChessAnalyzer
-    from chessAI.core.engine import EngineHandler
-except ImportError:
-    print("Warning: chessAI package not found. Analysis will fail.")
+# --- IMPORTS ---
+from chessAI.analyzer import ChessAnalyzer
+from chessAI.core.engine import EngineHandler
 
 app = Flask(__name__)
 
@@ -44,8 +43,12 @@ def get_engine_path():
         
         # Ensure it is executable (Linux only)
         if os.path.exists(path):
-            st = os.stat(path)
-            os.chmod(path, st.st_mode | stat.S_IEXEC)
+            try:
+                # Force 755 permissions (rwxr-xr-x)
+                # This allows Read/Write/Execute for Owner, and Read/Execute for everyone else.
+                os.chmod(path, 0o755)
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to set permissions for engine: {e}")
             
     return path
 
