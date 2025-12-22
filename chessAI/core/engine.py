@@ -14,38 +14,36 @@ class EngineHandler:
         self.time_limit = time_limit
         self.engine = None
         
-        if not self.engine_path:
-            # We don't print here to avoid spamming if user didn't want engine
-            pass
+        # Validation: If path provided but not found, warn immediately
+        if engine_path and not os.path.exists(engine_path):
+            print(f"⚠️ Error: Engine binary not found at {engine_path}")
 
     def __enter__(self):
         if self.engine_path:
+            # CRITICAL UPDATE: We removed the generic try/except block.
+            # If the engine fails to start (wrong binary, no permissions), 
+            # this will now RAISE an exception so you can see it in the UI/Logs
+            # instead of silently failing and returning 0 eval.
+            
+            # Windows/Jupyter specific fallback check
             try:
-                # Attempt to start the engine
                 self.engine = chess.engine.SimpleEngine.popen_uci(self.engine_path)
             except NotImplementedError:
-                # Specific catch for Windows Jupyter environment issue
-                print("⚠️ Warning: Engine analysis disabled.")
-                print("   Reason: 'asyncio' subprocesses are not supported in this Windows Jupyter environment.")
-                print("   Fix: Run as a standalone script or assume static metrics only.")
-                self.engine = None
-            except Exception as e:
-                print(f"⚠️ Warning: Could not start engine at '{self.engine_path}'.")
-                print(f"   Error: {e}")
-                self.engine = None
+                # This specific error only happens on Windows with specific event loops
+                if sys.platform == 'win32':
+                    print("⚠️ Warning: Asyncio subprocesses not supported. Engine disabled.")
+                    self.engine = None
+                else:
+                    raise # Re-raise on Linux/Render
         else:
-             print("ℹ️ Note: No engine path provided/found. Dynamic metrics (eval, classification) will be skipped.")
+             print("ℹ️ Note: No engine path provided/found. Dynamic metrics will be skipped.")
              
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.engine:
             try:
-                # Using close() instead of quit() is often safer in 
-                # problematic environments (like Windows Jupyter) 
-                # because it terminates the process/transport immediately 
-                # rather than waiting for a polite UCI 'quit' response.
-                print("DEBUG: Closing Engine...")
+                # Using close() is safer/faster for cleanup
                 self.engine.close() 
             except Exception as e:
                 print(f"DEBUG: Error closing engine: {e}")
@@ -64,7 +62,6 @@ class EngineHandler:
             info = self.engine.analyse(board, limit)
             
             # Normalize score to centipawns (from White's perspective)
-            # This is critical for consistent game analysis graphs
             score = info["score"].white()
             score_val = None
             
@@ -79,5 +76,6 @@ class EngineHandler:
                 "nodes": info.get("nodes", 0)
             }
         except Exception as e:
-            # Fallback if engine dies mid-analysis
+            # If analysis fails mid-stream, we log it
+            print(f"Analysis Failed: {e}")
             return {}
