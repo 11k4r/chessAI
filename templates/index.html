@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- HERO SECTION -->
+<div class="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+    
+    <div class="inline-flex items-center px-3 py-1 rounded-full border border-chessAccent/30 bg-chessAccent/10 text-chessAccent text-xs font-semibold mb-6 tracking-wide uppercase">
+        Now in Beta v1.0
+    </div>
+
+    <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+        {{ tagline }}<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-chessAccent to-yellow-200">
+            Master the Board
+        </span>
+    </h1>
+    
+    <p class="mt-4 max-w-2xl text-xl text-gray-400 mb-10">
+        {{ sub_tagline }}
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/analyze-game" class="bg-chessAccent text-chessDark px-8 py-3 rounded-lg text-lg font-bold hover:bg-yellow-400 transition shadow-lg shadow-yellow-500/20">
+            Analyze Game
+        </a>
+        <a href="/guide" class="border border-gray-600 px-8 py-3 rounded-lg text-lg font-medium hover:border-white transition">
+            View Guide
+        </a>
+    </div>
+</div>
+
+<!-- FEATURES GRID -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <h2 class="text-3xl font-bold mb-8 border-l-4 border-chessAccent pl-4">Explore Features</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for link in nav_links %}
+        <a href="{{ link.url }}" class="group block">
+            <div class="glass-panel p-6 rounded-xl h-full hover:border-chessAccent transition duration-300 transform hover:-translate-y-1">
+                <div class="w-12 h-12 bg-chessGray rounded-lg flex items-center justify-center mb-4 group-hover:bg-chessAccent group-hover:text-chessDark transition">
+                    <i class="fa-solid {{ link.icon }} text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-white">{{ link.name }}</h3>
+                <p class="text-gray-400 text-sm">{{ link.desc }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

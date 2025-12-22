@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold mb-4 text-white">Analyze Your Games</h1>
+        <p class="text-gray-400 text-lg">Enter a Chess.com username to retrieve recent matches.</p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="max-w-xl mx-auto mb-16">
+        <div class="flex gap-2">
+            <input type="text" id="username-input" placeholder="Chess.com Username (e.g. Hikaru)" 
+                class="flex-1 bg-gray-800 border border-gray-700 text-white px-6 py-4 rounded-xl focus:outline-none focus:border-chessAccent text-lg"
+                onkeypress="if(event.key === 'Enter') searchPlayer()">
+            <button onclick="searchPlayer()" 
+                class="bg-chessAccent hover:bg-yellow-500 text-gray-900 font-bold px-8 py-4 rounded-xl transition shadow-lg shadow-yellow-500/20">
+                <i class="fa-solid fa-search mr-2"></i> Fetch
+            </button>
+        </div>
+        <div id="error-msg" class="text-red-400 text-sm mt-3 text-center hidden"></div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-games" class="hidden text-center py-12">
+        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-chessAccent mb-4"></i>
+        <p class="text-gray-400">Fetching archives...</p>
+    </div>
+
+    <!-- Games Grid -->
+    <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <!-- Games will be injected here -->
+    </div>
+
+    <!-- Load More -->
+    <div class="text-center">
+        <button id="btn-load-more" onclick="loadNextArchive()" 
+            class="hidden bg-gray-800 hover:bg-gray-700 text-white font-bold px-8 py-3 rounded-xl border border-gray-700 transition">
+            Load More Games
+        </button>
+    </div>
+
+</div>
+
+<script>
+    let archiveUrls = [];
+    let currentArchiveIndex = 0;
+    let isFetching = false;
+    let searchedUsername = "";
+
+    async function searchPlayer() {
+        const usernameInput = document.getElementById('username-input');
+        searchedUsername = usernameInput.value.trim();
+        const errorEl = document.getElementById('error-msg');
+        const loader = document.getElementById('loading-games');
+        const grid = document.getElementById('games-grid');
+        const loadMoreBtn = document.getElementById('btn-load-more');
+
+        if (!searchedUsername) return;
+
+        // Reset UI
+        grid.innerHTML = '';
+        errorEl.classList.add('hidden');
+        loadMoreBtn.classList.add('hidden');
+        archiveUrls = [];
+        currentArchiveIndex = 0;
+
+        loader.classList.remove('hidden');
+
+        try {
+            // 1. Get Archives
+            const resp = await fetch('/api/search-player', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: searchedUsername })
+            });
+            
+            const data = await resp.json();
+            loader.classList.add('hidden');
+
+            if (data.error) {
+                errorEl.innerText = data.error;
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (!data.archives || data.archives.length === 0) {
+                errorEl.innerText = "No game archives found for this user.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            // Store archives (Newest first)
+            archiveUrls = data.archives;
+            
+            // 2. Load First Archive
+            await loadNextArchive();
+
+        } catch (e) {
+            loader.classList.add('hidden');
+            errorEl.innerText = "Failed to connect to server.";
+            errorEl.classList.remove('hidden');
+            console.error(e);
+        }
+    }
+
+    async function loadNextArchive() {
+        if (currentArchiveIndex >= archiveUrls.length || isFetching) return;
+        
+        const loadMoreBtn = document.getElementById('btn-load-more');
+        const grid = document.getElementById('games-grid');
+        
+        isFetching = true;
+        loadMoreBtn.innerText = "Loading...";
+        loadMoreBtn.classList.remove('hidden');
+
+        try {
+            const url = archiveUrls[currentArchiveIndex];
+            const resp = await fetch('/api/fetch-archive', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ url })
+            });
+
+            const data = await resp.json();
+            
+            if (data.games) {
+                // Render Games (Reverse to show newest in month first)
+                data.games.reverse().forEach(game => renderGameCard(game));
+                currentArchiveIndex++;
+            }
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            isFetching = false;
+            loadMoreBtn.innerText = "Load More Games";
+            // Hide button if no more archives
+            if (currentArchiveIndex >= archiveUrls.length) {
+                loadMoreBtn.classList.add('hidden');
+            }
+        }
+    }
+
+    function getTimeClassStyle(timeClass) {
+        const tc = (timeClass || '').toLowerCase();
+        if (tc === 'bullet') return 'bg-red-900 text-red-300 border border-red-700';
+        if (tc === 'blitz') return 'bg-yellow-900 text-yellow-300 border border-yellow-700';
+        if (tc === 'rapid') return 'bg-teal-900 text-teal-300 border border-teal-700';
+        if (tc === 'daily') return 'bg-blue-900 text-blue-300 border border-blue-700';
+        return 'bg-gray-700 text-gray-400 border border-gray-600';
+    }
+
+    function getResultDisplay(game) {
+        const white = game.white;
+        const black = game.black;
+        const isWhite = white.username.toLowerCase() === searchedUsername.toLowerCase();
+        
+        // If searched user is not in the game (unlikely but safe), default to white
+        const myResult = isWhite ? white.result : black.result;
+        
+        if (myResult === 'win') {
+            return { text: 'WIN', color: 'text-green-500', icon: 'fa-trophy' };
+        }
+        
+        const drawCodes = ['agreed', 'repetition', 'stalemate', 'insufficient', '50move', 'timevsinsufficient'];
+        if (drawCodes.includes(myResult)) {
+            return { text: 'DRAW', color: 'text-gray-400', icon: 'fa-handshake' };
+        }
+        
+        // Everything else is a loss (checkmated, resigned, timeout, abandoned)
+        return { text: 'LOSS', color: 'text-red-500', icon: 'fa-circle-xmark' };
+    }
+
+    function renderGameCard(game) {
+        const grid = document.getElementById('games-grid');
+        
+        const white = game.white || {};
+        const black = game.black || {};
+        const date = new Date(game.end_time * 1000).toLocaleDateString();
+        
+        const resultData = getResultDisplay(game);
+        const timeClassStyle = getTimeClassStyle(game.time_class);
+        
+        const card = document.createElement('div');
+        card.className = "glass-panel p-5 rounded-xl hover:border-chessAccent transition cursor-pointer group";
+        card.onclick = () => selectGame(game.pgn, white.username, black.username);
+
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+                <div class="text-xs font-mono text-gray-500">${date}</div>
+                <div class="text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${timeClassStyle}">
+                    ${game.time_class || 'Standard'}
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-3 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chess-pawn text-gray-400"></i>
+                        <span class="font-bold text-white text-sm truncate max-w-[120px]">${white.username}</span>
+                        <span class="text-xs text-gray-500">(${white.rating})</span>
+                    </div>
+                    ${white.result === 'win' ? '<i class="fa-solid fa-crown text-yellow-500 text-xs"></i>' : ''}
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chess-pawn text-black bg-gray-600 rounded-sm px-0.5"></i>
+                        <span class="font-bold text-white text-sm truncate max-w-[120px]">${black.username}</span>
+                        <span class="text-xs text-gray-500">(${black.rating})</span>
+                    </div>
+                     ${black.result === 'win' ? '<i class="fa-solid fa-crown text-yellow-500 text-xs"></i>' : ''}
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-gray-700 flex justify-between items-center">
+                <div class="font-mono font-bold ${resultData.color} text-lg flex items-center gap-2">
+                    ${resultData.text}
+                </div>
+                <div class="text-xs text-gray-400 group-hover:text-white transition">Analyze <i class="fa-solid fa-arrow-right ml-1"></i></div>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    }
+
+    function selectGame(pgn, white, black) {
+        localStorage.setItem('analyze_pgn', pgn);
+        localStorage.setItem('analyze_white', white);
+        localStorage.setItem('analyze_black', black);
+        window.location.href = '/analyzer';
+    }
+</script>
+{% endblock %}

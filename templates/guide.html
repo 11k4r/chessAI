@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold mb-4 text-white">Metric Guide</h1>
+        <p class="text-gray-400 text-lg">Understanding the 20+ advanced metrics behind ChessAI.</p>
+    </div>
+
+    <div class="grid gap-8">
+        
+        <!-- Section: Player Performance -->
+        <div class="glass-panel p-8 rounded-xl">
+            <h2 class="text-2xl font-bold text-chessAccent mb-6 border-b border-gray-700 pb-2">
+                <i class="fa-solid fa-user-astronaut mr-2"></i> Player Performance
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-white mb-1">Intuition</h3>
+                    <p class="text-sm text-gray-400">Measures accuracy in "low-complexity" positions. High intuition means you find natural, good moves easily without needing deep calculation.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Tactics</h3>
+                    <p class="text-sm text-gray-400">Accuracy in sharp, critical positions (high complexity). High tactics score means you excel in chaotic, calculation-heavy moments.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Resourcefulness</h3>
+                    <p class="text-sm text-gray-400">Your ability to find the best defense in difficult or losing positions. It measures tenacity under pressure.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Pressure Handling</h3>
+                    <p class="text-sm text-gray-400">Accuracy specifically when your King Safety score is low (i.e., your king is under attack).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Board Dynamics -->
+        <div class="glass-panel p-8 rounded-xl">
+            <h2 class="text-2xl font-bold text-chessAccent mb-6 border-b border-gray-700 pb-2">
+                <i class="fa-solid fa-chart-area mr-2"></i> Board Dynamics
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-white mb-1">Harmony</h3>
+                    <p class="text-sm text-gray-400">A measure of piece coordination. Calculated by how many of your pieces are protected by other friendly pieces.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Connectivity</h3>
+                    <p class="text-sm text-gray-400">Total number of defensive links between your pieces. A highly connected army is harder to double-attack.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Space</h3>
+                    <p class="text-sm text-gray-400">The number of squares you control in the opponent's half of the board.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Mobility</h3>
+                    <p class="text-sm text-gray-400">The raw number of legal moves available to you. More mobility generally means more options and activity.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Game Flow -->
+        <div class="glass-panel p-8 rounded-xl">
+            <h2 class="text-2xl font-bold text-chessAccent mb-6 border-b border-gray-700 pb-2">
+                <i class="fa-solid fa-wave-square mr-2"></i> Game Flow
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-white mb-1">Volatility</h3>
+                    <p class="text-sm text-gray-400">Standard deviation of the evaluation graph. High volatility means a wild game with big swings; low means a steady, controlled game.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Complexity</h3>
+                    <p class="text-sm text-gray-400">A heuristic score (0-10) estimating how hard a position is to calculate, based on piece tension, open lines, and king safety.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Criticality</h3>
+                    <p class="text-sm text-gray-400">Measures how "forced" the current moment is. High criticality means there is likely only one good move (e.g., check evasion).</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white mb-1">Novelty / Commonality</h3>
+                    <p class="text-sm text-gray-400">Estimates how often the current position appears in opening theory. 0% is a completely new position (Novelty).</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

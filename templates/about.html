@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    
+    <div class="text-center mb-16">
+        <!-- Replaced FontAwesome icon with Official Logo -->
+        <div class="w-24 h-24 bg-gray-800 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-lg shadow-chessAccent/20 p-4">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ChessAI Logo" class="w-full h-full object-contain">
+        </div>
+        <h1 class="text-5xl font-bold mb-6 text-white">Push Chess Forward.</h1>
+        <p class="text-xl text-gray-400 leading-relaxed">
+            ChessAI isn't just another engine wrapper. It's a new way to understand the game, focusing on the <span class="text-chessAccent">human elements</span> of chess—intuition, pressure, and harmony.
+        </p>
+    </div>
+
+    <div class="space-y-12">
+        <!-- Mission -->
+        <section>
+            <h2 class="text-2xl font-bold text-white mb-4">Our Mission</h2>
+            <div class="glass-panel p-6 rounded-xl text-gray-300 leading-7">
+                <p>
+                    Traditional engines give you a number: <code>+0.5</code>. But they don't tell you <em>why</em>. Is it because you have more space? Because your pieces are better coordinated? Or because your opponent made a subtle strategic error?
+                </p>
+                <p class="mt-4">
+                    ChessAI breaks down that single number into <strong>20+ qualitative metrics</strong>. We quantify abstract concepts like "Harmony" and "Resourcefulness" so you can train specific aspects of your game that raw calculation can't teach.
+                </p>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section>
+            <h2 class="text-2xl font-bold text-white mb-4">The Technology</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="glass-panel p-6 rounded-xl border border-gray-700/50">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fa-solid fa-microchip text-chessAccent"></i>
+                        <h3 class="font-bold text-white">Stockfish 16+</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        Powered by the world's strongest open-source chess engine for raw tactical verification and evaluation.
+                    </p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl border border-gray-700/50">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fa-solid fa-network-wired text-chessAccent"></i>
+                        <h3 class="font-bold text-white">Graph Theory</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        Our "Harmony" and "Connectivity" metrics use graph theory algorithms to model the defensive web of your pieces.
+                    </p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl border border-gray-700/50">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fa-solid fa-code text-chessAccent"></i>
+                        <h3 class="font-bold text-white">Python Core</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        Custom-built Python analysis pipeline processing thousands of positions per second to generate aggregation stats.
+                    </p>
+                </div>
+                
+                 <div class="glass-panel p-6 rounded-xl border border-gray-700/50">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fa-solid fa-layer-group text-chessAccent"></i>
+                        <h3 class="font-bold text-white">Bitboard Logic</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        Ultra-fast bitwise operations calculate static features like Pawn Structure and Mobility in microseconds.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,899 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Dependencies -->
+<link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" xintegrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+<!-- Move Class Distribution Modal -->
+<div id="class-dist-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 shadow-2xl relative" onclick="event.stopPropagation()">
+        <button onclick="closeClassDist()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-xl font-bold text-white mb-1">Move Classification</h3>
+        <p class="text-xs text-gray-500 mb-4 uppercase tracking-wider">Distribution by type</p>
+        <div id="class-dist-content" class="space-y-2"></div>
+    </div>
+</div>
+
+<!-- Pawn Structure Modal -->
+<div id="pawn-struct-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 shadow-2xl relative" onclick="event.stopPropagation()">
+        <button onclick="closePawnStruct()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-xl font-bold text-white mb-1">Pawn Structure</h3>
+        <p class="text-xs text-gray-500 mb-4 uppercase tracking-wider">Breakdown</p>
+        <div id="pawn-struct-content" class="space-y-2"></div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 h-[calc(100vh-64px)] overflow-hidden">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+        
+        <!-- LEFT: BOARD AREA -->
+        <div class="flex flex-col gap-2 h-full">
+            <div class="glass-panel p-2 rounded-xl flex-grow flex flex-col items-center justify-center relative min-h-0">
+                
+                <!-- Player Info (Top) -->
+                <div class="w-full flex justify-between items-center mb-2 px-4 border-b border-gray-700 pb-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></div>
+                        <span id="player-top" class="font-bold text-gray-300 text-sm">Opponent</span>
+                    </div>
+                    
+                    <!-- Top Right Info Badges (Fixed Widths) -->
+                    <div class="flex gap-2">
+                        <!-- Game Type Badge -->
+                        <div id="game-type-badge" class="hidden w-16 flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold font-mono bg-gray-700 text-gray-400 uppercase tracking-wider">
+                            --
+                        </div>
+                        <!-- Phase Badge -->
+                        <div id="game-phase-badge" class="hidden w-24 flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold font-mono bg-gray-700 text-gray-400 uppercase tracking-wider">
+                            --
+                        </div>
+                        <!-- Eval Bar -->
+                        <div id="eval-bar" class="w-24 flex items-center justify-center bg-gray-700 px-2 py-0.5 rounded text-xs font-mono text-chessAccent transition-colors duration-300">
+                            Eval: 0.0
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Board -->
+                <div id="board-container" class="w-full flex justify-center items-center" style="height: 100%; max-height: 60vh;">
+                    <div id="myBoard" style="width: 100%; max-width: 60vh; aspect-ratio: 1/1;"></div>
+                </div>
+
+                <!-- Player Info (Bottom) -->
+                <div class="w-full flex justify-between items-center mt-2 px-4 border-t border-gray-700 pt-1">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></div>
+                        <span id="player-bottom" class="font-bold text-gray-300 text-sm">User</span>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="flex gap-2 items-center">
+                        <span id="explore-badge" class="hidden px-2 py-0.5 bg-yellow-900/50 text-yellow-500 text-[10px] font-bold rounded uppercase tracking-wider border border-yellow-700/50 mr-2">
+                            Explore Mode
+                        </span>
+                        
+                        <button id="btn-flip" onclick="flipBoard()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs text-gray-300" title="Flip Board">
+                            <i class="fa-solid fa-retweet"></i>
+                        </button>
+                        <div class="w-px bg-gray-600 mx-1"></div>
+                        
+                        <button id="btn-fast-back" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs" title="Start / Return to Game">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </button>
+                        <button id="btn-prev" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button id="btn-next" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button id="btn-fast-fwd" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-xs" title="End of Game">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PGN / Status -->
+            <div class="glass-panel p-3 rounded-xl h-24 overflow-y-auto font-mono text-[10px] text-gray-400" id="pgn-display">
+                Connecting to Analysis Engine...
+            </div>
+        </div>
+
+        <!-- RIGHT: METRICS DASHBOARD -->
+        <div class="glass-panel p-4 rounded-xl flex flex-col gap-3 overflow-y-auto custom-scrollbar h-full">
+            
+            <div class="shrink-0">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-chessAccent">ChessAI Analyzer</h2>
+                    <div class="flex items-center gap-2">
+                        <!-- New Absolute/Relative Toggle Button -->
+                        <button id="btn-metric-mode" onclick="toggleMetricMode()" class="bg-gray-800 text-[10px] text-gray-400 border border-gray-600 rounded px-2 py-1 hover:text-white transition uppercase font-bold tracking-wider" title="Toggle Absolute/Relative Metrics">
+                            Abs
+                        </button>
+                        <select id="metrics-view-select" onchange="updateMetricsView(this.value)" class="bg-gray-800 text-[10px] text-gray-300 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:border-chessAccent cursor-pointer">
+                            <option value="user">View: User</option>
+                            <option value="both">View: Both</option>
+                            <option value="white">View: White</option>
+                            <option value="black">View: Black</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex border-b border-gray-700 mb-2">
+                    <button id="tab-btn-game" onclick="switchTab('game')" class="px-3 py-1.5 text-xs font-bold text-chessAccent border-b-2 border-chessAccent focus:outline-none transition-colors">Game analysis</button>
+                    <button id="tab-btn-position" onclick="switchTab('position')" class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white focus:outline-none transition-colors border-b-2 border-transparent">Position analysis</button>
+                    <button id="tab-btn-lines" onclick="switchTab('lines')" class="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white focus:outline-none transition-colors border-b-2 border-transparent">Explore lines</button>
+                </div>
+            </div>
+            
+            <!-- TABS -->
+            <div id="tab-content-game" class="flex flex-col gap-3">
+                <!-- Eval Graph Container -->
+                <div class="bg-gray-800/50 p-3 rounded-lg text-center shrink-0 h-24 relative flex flex-col justify-center items-center">
+                    <canvas id="eval-graph" class="w-full h-full cursor-crosshair"></canvas>
+                    <!-- Fallback / Loading Text -->
+                    <div id="graph-loading" class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">Waiting for data...</div>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div id="stats-grid" class="grid grid-cols-3 gap-2">
+                    <div class="col-span-3 text-center text-gray-500 py-10 flex flex-col items-center justify-center h-full" id="loading-container">
+                        <i class="fa-solid fa-microchip fa-bounce text-3xl mb-3 text-chessAccent"></i>
+                        <div class="text-sm font-bold text-white mb-1">Initializing...</div>
+                        <div class="text-xs text-gray-400 mb-2" id="loading-status">(Connecting to server)</div>
+                        <div class="w-full max-w-[200px] bg-gray-700 h-2 rounded-full overflow-hidden relative">
+                            <div id="loading-bar" class="bg-chessAccent h-full absolute top-0 left-0 transition-all duration-200" style="width: 0%"></div>
+                        </div>
+                        <div id="loading-percent" class="text-chessAccent text-xs font-mono mt-1">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POSITION TAB -->
+            <div id="tab-content-position" class="hidden flex flex-col gap-3 h-full">
+                 <div id="position-info-card" class="bg-gray-800/50 p-3 rounded-lg text-center shrink-0">
+                    <div class="text-gray-400 text-[10px] uppercase tracking-wide">Move Info</div>
+                    <div class="mt-1 flex justify-center items-center gap-4">
+                        <span id="pos-move-san" class="text-xl font-bold text-white">Start</span>
+                        <div class="flex flex-col items-center">
+                            <span id="pos-move-class" class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-700 text-gray-400">--</span>
+                            <span id="pos-move-time" class="text-[10px] text-gray-500 font-mono mt-0.5">--</span>
+                        </div>
+                    </div>
+                 </div>
+                 
+                 <!-- Stats Grid (Scrollable) -->
+                 <div id="position-stats-grid" class="grid grid-cols-3 gap-2 overflow-y-auto"></div>
+
+                 <!-- Copyable FEN Box -->
+                 <div class="mt-auto pt-2 border-t border-gray-700">
+                    <div class="flex gap-2 items-center bg-gray-800/80 p-2 rounded border border-gray-600">
+                        <div class="text-[10px] text-gray-500 font-bold px-1">FEN</div>
+                        <input type="text" id="fen-input-pos" readonly class="bg-transparent text-[10px] text-gray-300 font-mono w-full focus:outline-none" value="startpos">
+                        <button onclick="copyFenPosition()" class="text-gray-400 hover:text-white px-2 transition" title="Copy FEN">
+                            <i class="fa-solid fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                 </div>
+            </div>
+
+            <div id="tab-content-lines" class="hidden flex flex-col items-center justify-center py-10 text-gray-500">
+                <i class="fa-solid fa-person-digging text-3xl mb-3"></i>
+                <div class="font-bold">Coming Soon</div>
+                <div class="text-xs">Line exploration is under development.</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Metric Descriptions & Config ---
+    const metricDescriptions = {
+        "Accuracy": "Weighted average of move quality (0-100%). Click for details.",
+        "Intuition": "Accuracy in low-complexity positions.",
+        "Tactics": "Accuracy in sharp, critical positions.",
+        "Opening Acc": "Precision during the first 10 moves.",
+        "Midgame Acc": "Precision during the middlegame phase.",
+        "Endgame Acc": "Precision during the endgame phase.",
+        "Aggression": "Frequency of forward/threatening moves.",
+        "Resourceful": "Accuracy when defending difficult positions.",
+        "Calculation": "Avg complexity of successful moves.",
+        "Strategy": "Control of space and structural elements.",
+        "Volatility": "Evaluation swings per move.",
+        "Attack": "Average attack intensity.",
+        "Defense": "Average connectivity/defense score.",
+        "Opening Theory": "% of best moves in opening phase.",
+        "Key Moments": "Number of critical positions faced.",
+        "Missed Opp": "Blunders committed in winning positions.",
+        "Pressure": "Accuracy when king safety is compromised.",
+        "Time Mgmt": "Placeholder (0.0 without clocks).",
+        "Material": "Weighted piece value.",
+        "Mobility": "Legal move count.",
+        "King Safety": "Lower score is safer.",
+        "Space": "Controlled squares. Click to visualize.",
+        "Activity": "Piece activity score.",
+        "Center Ctrl": "Control of center squares.",
+        "Connectivity": "Defended pieces.",
+        "Harmony": "Piece coordination.",
+        "Weakness": "Hanging pieces.",
+        "Complexity": "Position chaos.",
+        "Criticality": "Forced lines.",
+        "Threats": "Direct threats.",
+        "Pawn Struct": "Heuristic score. Click for details.",
+        "Commonality": "Likelihood of this position in opening theory (0-100)."
+    };
+
+    var board = null;
+    var game = new Chess();
+    var currentMoveIndex = -1;
+    var gameHistory = []; 
+    var originalPositions = [];
+    var totalMoves = 0;
+    
+    var userColor = 'white';
+    var whiteName = "White";
+    var blackName = "Black";
+    var currentViewMode = 'user';
+    var metricMode = 'absolute';
+    
+    var lastPosData = null;
+    var lastGameMetrics = null;
+    
+    var gameType = "Standard";
+    var isExploring = false;
+    var divergenceIndex = -1;
+    var isSpaceHighlighted = false;
+
+    // --- Modal Logic ---
+    function showClassDist() {
+        if (!lastGameMetrics) return;
+        const modal = document.getElementById('class-dist-modal');
+        const content = document.getElementById('class-dist-content');
+        
+        let dataToShow = (currentViewMode === 'black') ? lastGameMetrics.black.move_distribution : lastGameMetrics.white.move_distribution;
+        if(currentViewMode === 'user') dataToShow = (userColor === 'white') ? lastGameMetrics.white.move_distribution : lastGameMetrics.black.move_distribution;
+        
+        const label = (currentViewMode === 'user') ? ((userColor === 'white') ? "White (User)" : "Black (User)") : (currentViewMode === 'black' ? "Black" : "White");
+
+        if (!dataToShow) dataToShow = {};
+        const classOrder = ["Brilliant", "Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
+        const classColors = {"Brilliant": "text-cyan-400", "Best": "text-green-400", "Excellent": "text-green-200", "Good": "text-blue-200", "Inaccuracy": "text-yellow-200", "Mistake": "text-orange-400", "Blunder": "text-red-500"};
+
+        let html = `<div class='text-sm text-gray-400 mb-2 border-b border-gray-700 pb-1'>Player: <span class='text-white font-bold'>${label}</span></div>`;
+        classOrder.forEach(cls => {
+            html += `<div class="flex justify-between items-center p-2 bg-gray-800/50 rounded"><span class="${classColors[cls] || "text-gray-300"} font-bold text-sm">${cls}</span><span class="text-white font-mono font-bold">${dataToShow[cls] || 0}</span></div>`;
+        });
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+    
+    function showPawnStruct() {
+        if (!lastPosData || !lastPosData.static.pawn_structure) return;
+        const modal = document.getElementById('pawn-struct-modal');
+        const content = document.getElementById('pawn-struct-content');
+        const ps = lastPosData.static.pawn_structure;
+        
+        let dataToShow = (currentViewMode === 'black') ? ps.black : ps.white;
+        if(currentViewMode === 'user') dataToShow = (userColor === 'white') ? ps.white : ps.black;
+        const label = (currentViewMode === 'user') ? ((userColor === 'white') ? "White (User)" : "Black (User)") : (currentViewMode === 'black' ? "Black" : "White");
+
+        if (!dataToShow) return;
+
+        let html = `<div class='text-sm text-gray-400 mb-2 border-b border-gray-700 pb-1'>Player: <span class='text-white font-bold'>${label}</span></div>`;
+        const items = [
+            {k: "connected", label: "Connected", color: "text-green-400"},
+            {k: "passed", label: "Passed", color: "text-blue-400"},
+            {k: "isolated", label: "Isolated", color: "text-orange-400"},
+            {k: "doubled", label: "Doubled", color: "text-red-400"}
+        ];
+
+        items.forEach(item => {
+            html += `<div class="flex justify-between items-center p-2 bg-gray-800/50 rounded"><span class="${item.color} font-bold text-sm">${item.label}</span><span class="text-white font-mono font-bold">${dataToShow[item.k] || 0}</span></div>`;
+        });
+        
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+
+    function toggleSpaceHighlights(forceUpdate = false) {
+        const boardEl = document.getElementById('myBoard');
+        
+        if (!forceUpdate) {
+            if (isSpaceHighlighted) {
+                boardEl.querySelectorAll('.space-highlight').forEach(el => el.remove());
+                isSpaceHighlighted = false;
+                return;
+            } else {
+                isSpaceHighlighted = true;
+            }
+        } else {
+             if (!isSpaceHighlighted) return;
+             boardEl.querySelectorAll('.space-highlight').forEach(el => el.remove());
+        }
+
+        if (!lastPosData || !lastPosData.static.space) return;
+
+        let squaresToShow = [];
+        const whiteSpace = lastPosData.static.space.white.space_squares || [];
+        const blackSpace = lastPosData.static.space.black.space_squares || [];
+
+        let showWhite = false;
+        let showBlack = false;
+
+        if (currentViewMode === 'both') { showWhite = true; showBlack = true; }
+        else if (currentViewMode === 'white') { showWhite = true; }
+        else if (currentViewMode === 'black') { showBlack = true; }
+        else if (currentViewMode === 'user') {
+            if (userColor === 'white') showWhite = true;
+            else showBlack = true;
+        }
+
+        if (showWhite) squaresToShow = squaresToShow.concat(whiteSpace.map(s => ({ sq: s, color: 'rgba(59, 130, 246, 0.5)' })));
+        if (showBlack) squaresToShow = squaresToShow.concat(blackSpace.map(s => ({ sq: s, color: 'rgba(239, 68, 68, 0.5)' })));
+
+        squaresToShow.forEach(item => {
+            const sqName = getSquareName(item.sq);
+            const sqEl = boardEl.querySelector(`.square-${sqName}`);
+            if (sqEl) {
+                const highlight = document.createElement('div');
+                highlight.className = 'space-highlight';
+                highlight.style.position = 'absolute';
+                highlight.style.inset = '0';
+                highlight.style.backgroundColor = item.color;
+                highlight.style.opacity = '0.6';
+                sqEl.appendChild(highlight);
+            }
+        });
+    }
+    
+    function getSquareName(index) {
+        const files = ['a','b','c','d','e','f','g','h'];
+        const file = index % 8;
+        const rank = Math.floor(index / 8) + 1;
+        return files[file] + rank;
+    }
+
+    function closeClassDist() { document.getElementById('class-dist-modal').classList.add('hidden'); }
+    function closePawnStruct() { document.getElementById('pawn-struct-modal').classList.add('hidden'); }
+
+    function copyFenPosition() {
+        const fenInput = document.getElementById('fen-input-pos');
+        if (!fenInput) return;
+        fenInput.select(); fenInput.setSelectionRange(0, 99999);
+        try {
+            document.execCommand('copy');
+            const btn = fenInput.nextElementSibling;
+            const icon = btn.querySelector('i');
+            const originalClass = icon.className;
+            icon.className = "fa-solid fa-check text-green-400 text-xs";
+            setTimeout(() => { icon.className = originalClass; }, 1500);
+        } catch (err) { console.error('Failed to copy text: ', err); }
+    }
+
+    window.onclick = function(event) {
+        const classModal = document.getElementById('class-dist-modal');
+        const pawnModal = document.getElementById('pawn-struct-modal');
+        if (event.target === classModal) closeClassDist();
+        if (event.target === pawnModal) closePawnStruct();
+    }
+
+    // --- Core Logic ---
+    function getEvalCp(evalObj) {
+        if (!evalObj) return null;
+        if (evalObj.type === 'mate') return evalObj.value > 0 ? 10000 : -10000;
+        return parseInt(evalObj.value);
+    }
+
+    function calculateClassification(prevEval, currEval, color) {
+        const p = getEvalCp(prevEval);
+        const c = getEvalCp(currEval);
+        if (p === null || c === null) return "Explore";
+
+        let diff = c - p;
+        if (color === 'black') diff = p - c;
+
+        if (diff <= -300) return "Blunder";
+        if (diff <= -100) return "Mistake";
+        if (diff <= -50) return "Inaccuracy";
+        return "Good"; 
+    }
+
+    function onDragStart() { return totalMoves > 0; }
+    function onDrop(source, target) {
+        const prevFen = game.fen();
+        var move = game.move({ from: source, to: target, promotion: 'q' });
+        if (move === null) return 'snapback';
+        handleUserMove(move, prevFen);
+    }
+    function onSnapEnd() { board.position(game.fen()); }
+    function onMoveEnd() {
+        const boardEl = document.getElementById('myBoard');
+        boardEl.querySelectorAll('.space-highlight').forEach(el => el.remove());
+        isSpaceHighlighted = false;
+    }
+
+    var config = { draggable: true, position: 'start', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd, onMoveEnd: onMoveEnd, pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' };
+    board = Chessboard('myBoard', config);
+    $(window).resize(board.resize);
+
+    function goToMove(index) {
+        if (isExploring) { isExploring = false; document.getElementById('explore-badge').classList.add('hidden'); }
+        if (index < -1) index = -1;
+        if (index >= originalPositions.length - 1) index = originalPositions.length - 2;
+        currentMoveIndex = index;
+        
+        game.reset();
+        if (index >= 0) {
+            for (let i = 0; i <= index; i++) {
+                game.move(gameHistory[i]); 
+            }
+        }
+        
+        board.position(game.fen());
+        const boardEl = document.getElementById('myBoard');
+        boardEl.querySelectorAll('.space-highlight').forEach(el => el.remove());
+        isSpaceHighlighted = false;
+        
+        const posData = originalPositions[index + 1];
+        if (posData) updateLiveStats(posData);
+    }
+
+    function handleUserMove(move, prevFen) {
+        let matchesOriginal = false;
+        if (!isExploring && currentMoveIndex + 1 < originalPositions.length) {
+            if (game.fen().split(' ')[0] === originalPositions[currentMoveIndex + 1].fen.split(' ')[0]) matchesOriginal = true;
+        }
+        if (matchesOriginal) { currentMoveIndex++; updateLiveStats(originalPositions[currentMoveIndex + 1]); return; }
+        if (!isExploring) { isExploring = true; divergenceIndex = currentMoveIndex; document.getElementById('explore-badge').classList.remove('hidden'); }
+        fetchPositionAnalysis(game.fen(), move.san, prevFen);
+    }
+
+    async function fetchPositionAnalysis(fen, san, prevFen) {
+        document.getElementById('pos-move-san').innerText = san;
+        document.getElementById('pos-move-class').innerText = "Analyzing...";
+        document.getElementById('pos-move-time').innerText = "-";
+        
+        let prevEval = null;
+        if (lastPosData && lastPosData.dynamic && lastPosData.dynamic.eval) {
+            prevEval = lastPosData.dynamic.eval;
+        }
+        const mover = game.turn() === 'w' ? 'black' : 'white'; 
+
+        try {
+            const body = { fen: fen, move_san: san };
+            if (prevFen) body.prev_fen = prevFen;
+
+            const res = await fetch('/api/analyze-position', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(body) 
+            });
+            
+            const data = await res.json();
+            if(data.status === 'success') {
+                const metrics = data.metrics;
+                if (!metrics.move_info) metrics.move_info = {};
+                metrics.move_info.san = san;
+                
+                let cls = metrics.classification || metrics.move_info.classification;
+                if (!cls && prevEval && metrics.dynamic && metrics.dynamic.eval) {
+                    const currEval = metrics.dynamic.eval;
+                    cls = calculateClassification(prevEval, currEval, mover);
+                }
+
+                metrics.move_info.classification = cls || "Explore";
+                metrics.move_info.time_spend = '-';
+                
+                updateLiveStats(metrics);
+                switchTab('position');
+            }
+        } catch(e) { console.error("Analysis failed", e); }
+    }
+
+    $('#btn-fast-back').on('click', () => isExploring ? goToMove(divergenceIndex) : goToMove(-1));
+    $('#btn-fast-fwd').on('click', () => goToMove(originalPositions.length - 2));
+    $('#btn-next').on('click', () => !isExploring && goToMove(currentMoveIndex + 1));
+    $('#btn-prev').on('click', () => {
+        if (isExploring) { game.undo(); board.position(game.fen()); return; }
+        goToMove(currentMoveIndex - 1);
+    });
+
+    function flipBoard() { board.flip(); updatePlayerLabels(); }
+    function updatePlayerLabels() {
+        const orientation = board.orientation();
+        document.getElementById('player-top').innerText = orientation === 'white' ? blackName : whiteName;
+        document.getElementById('player-bottom').innerText = orientation === 'white' ? whiteName : blackName;
+    }
+
+    function handleStreamMessage(msg) {
+        if (msg.type === 'start') {
+            totalMoves = msg.total_moves;
+            document.getElementById('loading-status').innerText = `(Analyzing ${totalMoves} moves)`;
+            document.getElementById('pgn-display').innerText = msg.pgn;
+            
+            // Prefer headers from message if available
+            if (msg.headers.White && msg.headers.White !== "?") whiteName = msg.headers.White;
+            if (msg.headers.Black && msg.headers.Black !== "?") blackName = msg.headers.Black;
+            
+            const tc = msg.headers.TimeControl || "";
+            let baseSeconds = 0;
+            if (tc.includes('+')) baseSeconds = parseInt(tc.split('+')[0]);
+            else baseSeconds = parseInt(tc) || 0;
+
+            if (baseSeconds > 600) gameType = "Rapid"; 
+            else if (baseSeconds >= 180) gameType = "Blitz"; 
+            else if (baseSeconds > 0) gameType = "Bullet"; 
+            else gameType = "Standard";
+            
+            const gtBadge = document.getElementById('game-type-badge');
+            gtBadge.innerText = gameType;
+            gtBadge.title = `TC: ${tc}`;
+            gtBadge.classList.remove('hidden');
+            
+            let gtClass = "w-16 flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold font-mono uppercase tracking-wider ";
+            if(gameType === "Rapid") gtClass += "bg-teal-900 text-teal-300 border border-teal-700";
+            else if(gameType === "Blitz") gtClass += "bg-yellow-900 text-yellow-300 border border-yellow-700";
+            else if(gameType === "Bullet") gtClass += "bg-red-900 text-red-300 border border-red-700";
+            else gtClass += "bg-gray-700 text-gray-400 border border-gray-600";
+            gtBadge.className = gtClass;
+
+            // Simple heuristic to orient board for the "user"
+            // Since we don't know exactly who is who, we can just default to white
+            // or check if 'blackName' matches the searched user (if we had it).
+            // Defaulting to White orientation usually makes sense unless specified.
+            userColor = 'white';
+            
+            board.orientation(userColor);
+            updatePlayerLabels();
+            game.load_pgn(msg.pgn);
+            gameHistory = game.history({ verbose: true });
+            game.reset();
+            board.position(game.fen());
+            config.draggable = true;
+
+        } else if (msg.type === 'progress') {
+            if (totalMoves > 0) {
+                const pct = Math.round((msg.current / totalMoves) * 100);
+                document.getElementById('loading-bar').style.width = pct + "%";
+                document.getElementById('loading-percent').innerText = pct + "%";
+                document.getElementById('loading-status').innerText = `Analyzing move ${msg.current}/${totalMoves}`;
+            }
+        } else if (msg.type === 'complete') {
+            document.getElementById('loading-bar').style.width = "100%";
+            setTimeout(() => { loadGameData(msg.analysis); }, 500);
+        } else if (msg.type === 'error') {
+             document.getElementById('stats-grid').innerHTML = `<div class="text-red-500 text-center col-span-3 p-4">Error: ${msg.message}</div>`;
+        }
+    }
+
+    function loadGameData(analysis) {
+        lastGameMetrics = analysis.game_metrics;
+        originalPositions = analysis.positions; 
+        drawEvalGraph(originalPositions);
+        renderGameMetricsGrid(lastGameMetrics);
+        updateLiveStats(originalPositions[0]); 
+    }
+
+    // --- Graph & Rendering ---
+    function drawEvalGraph(positions, highlightIndex = -1) {
+        const canvas = document.getElementById('eval-graph');
+        if (!canvas) return;
+        document.getElementById('graph-loading').style.display = 'none';
+        
+        const newCanvas = canvas.cloneNode(true);
+        canvas.parentNode.replaceChild(newCanvas, canvas);
+        const ctx = newCanvas.getContext('2d');
+        const width = newCanvas.offsetWidth;
+        const height = newCanvas.offsetHeight;
+        newCanvas.width = width * window.devicePixelRatio;
+        newCanvas.height = height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        const evals = positions.map(p => {
+            if (!p.dynamic || !p.dynamic.eval) return 0;
+            const ev = p.dynamic.eval;
+            return ev.type === 'mate' ? (ev.value > 0 ? 700 : -700) : ev.value;
+        });
+
+        const phases = positions.map(p => p.static ? p.static.phase : 'Middlegame');
+        const maxEval = 700; const zeroY = height / 2; const stepX = width / (evals.length - 1 || 1);
+        ctx.clearRect(0, 0, width, height);
+        
+        const phaseColors = { "Opening": "rgba(59, 130, 246, 0.15)", "Middlegame": "rgba(168, 85, 247, 0.15)", "Endgame": "rgba(236, 72, 153, 0.15)" };
+
+        for(let i=0; i < evals.length - 1; i++) {
+            let x1 = i * stepX; let x2 = (i + 1) * stepX;
+            let phase = phases[i+1] || phases[i] || "Middlegame";
+            ctx.fillStyle = phaseColors[phase] || phaseColors["Middlegame"];
+            ctx.fillRect(x1, 0, (x2 - x1), height);
+        }
+
+        ctx.beginPath(); ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; ctx.moveTo(0, zeroY);
+        evals.forEach((val, i) => { let yVal = Math.max(0, Math.min(700, val)); ctx.lineTo(i * stepX, zeroY - (yVal / 700) * zeroY); });
+        ctx.lineTo(width, zeroY); ctx.fill();
+
+        ctx.beginPath(); ctx.fillStyle = "rgba(0, 0, 0, 0.3)"; ctx.moveTo(0, zeroY);
+        evals.forEach((val, i) => { let yVal = Math.min(0, Math.max(-700, val)); ctx.lineTo(i * stepX, zeroY + (Math.abs(yVal) / 700) * zeroY); });
+        ctx.lineTo(width, zeroY); ctx.fill();
+
+        ctx.beginPath(); ctx.strokeStyle = "rgba(255, 255, 255, 0.2)"; ctx.lineWidth = 1; ctx.moveTo(0, zeroY); ctx.lineTo(width, zeroY); ctx.stroke();
+        ctx.beginPath(); ctx.strokeStyle = "#eab308"; ctx.lineWidth = 2;
+        evals.forEach((val, i) => {
+            let d = Math.max(-700, Math.min(700, val));
+            let y = d >= 0 ? zeroY - (d/700)*zeroY : zeroY + (Math.abs(d)/700)*zeroY;
+            if(i===0) ctx.moveTo(0,y); else ctx.lineTo(i*stepX, y);
+        });
+        ctx.stroke();
+
+        if (highlightIndex !== undefined && highlightIndex >= -1 && highlightIndex < evals.length - 1) {
+            const arrayIndex = highlightIndex + 1;
+            const dotX = arrayIndex * stepX;
+            const val = evals[arrayIndex];
+            let d = Math.max(-700, Math.min(700, val));
+            let dotY = d >= 0 ? zeroY - (d/700)*zeroY : zeroY + (Math.abs(d)/700)*zeroY;
+            ctx.beginPath(); ctx.arc(dotX, dotY, 4, 0, 2 * Math.PI); ctx.fillStyle = "white"; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.stroke();
+        }
+
+        newCanvas.addEventListener('click', (e) => {
+            const rect = newCanvas.getBoundingClientRect();
+            const idx = Math.round((e.clientX - rect.left) / stepX);
+            if(idx >= 0 && idx < evals.length) goToMove(idx - 1);
+        });
+    }
+
+    function toggleMetricMode() {
+        metricMode = (metricMode === 'absolute') ? 'relative' : 'absolute';
+        updateMetricModeButton();
+        if (lastPosData) renderPositionMetrics(lastPosData);
+    }
+
+    function updateMetricModeButton() {
+        const btn = document.getElementById('btn-metric-mode');
+        if (metricMode === 'relative') {
+            btn.innerText = "Rel";
+            btn.classList.remove('text-gray-400', 'border-gray-600');
+            btn.classList.add('text-chessAccent', 'border-chessAccent');
+        } else {
+            btn.innerText = "Abs";
+            btn.classList.remove('text-chessAccent', 'border-chessAccent');
+            btn.classList.add('text-gray-400', 'border-gray-600');
+        }
+    }
+
+    function updateMetricsView(mode) { 
+        currentViewMode = mode; 
+        if (metricMode === 'relative') { metricMode = 'absolute'; updateMetricModeButton(); }
+        if (lastGameMetrics) renderGameMetricsGrid(lastGameMetrics); 
+        if (lastPosData) renderPositionMetrics(lastPosData); 
+        toggleSpaceHighlights(true);
+    }
+
+    function switchTab(tabName) {
+        ['game', 'position', 'lines'].forEach(t => {
+            document.getElementById(`tab-content-${t}`).classList.add('hidden');
+            document.getElementById(`tab-btn-${t}`).classList.replace('text-chessAccent', 'text-gray-400');
+            document.getElementById(`tab-btn-${t}`).classList.replace('border-chessAccent', 'border-transparent');
+        });
+        document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+        const active = document.getElementById(`tab-btn-${tabName}`);
+        active.classList.replace('text-gray-400', 'text-chessAccent');
+        active.classList.replace('border-transparent', 'border-chessAccent');
+        if (tabName === 'position' && lastPosData) renderPositionMetrics(lastPosData);
+    }
+
+    const createCard = (label, wVal, bVal, icon, allowRelative = false) => {
+        const desc = metricDescriptions[label] || label;
+        let valueHtml = "";
+
+        if (allowRelative && metricMode === 'relative') {
+            let v1 = wVal, v2 = bVal;
+            if (currentViewMode === 'black') { v1 = bVal; v2 = wVal; } 
+            else if (currentViewMode === 'user') { if (userColor === 'black') { v1 = bVal; v2 = wVal; } else { v1 = wVal; v2 = bVal; } }
+            let diff = (parseFloat(v1) || 0) - (parseFloat(v2) || 0);
+            let colorClass = diff > 0 ? "text-green-400" : (diff < 0 ? "text-red-400" : "text-gray-400");
+            let sign = diff > 0 ? "+" : "";
+            valueHtml = `<span class="${colorClass} text-sm font-bold">${sign}${parseFloat(diff.toFixed(2))}</span>`;
+        } else {
+            let val = (currentViewMode === 'both') ? null : ((currentViewMode === 'user' ? (userColor === 'white' ? wVal : bVal) : (currentViewMode === 'white' ? wVal : bVal)));
+            valueHtml = (currentViewMode === 'both') 
+                ? `<span class="text-white">${wVal}</span><span class="text-gray-600 text-[10px]">|</span><span class="text-white">${bVal}</span>` 
+                : `<span class="text-white text-sm">${val}</span>`;
+        }
+
+        let clickAttr = '', cursorClass = '';
+        if (["Accuracy", "Pawn Struct", "Space"].includes(label)) cursorClass = 'cursor-pointer hover:bg-gray-700';
+        if (label === "Accuracy") clickAttr = 'onclick="showClassDist()"';
+        else if (label === "Pawn Struct") clickAttr = 'onclick="showPawnStruct()"';
+        else if (label === "Space") clickAttr = 'onclick="toggleSpaceHighlights()"';
+
+        return `<div ${clickAttr} class="bg-gray-800 p-2 rounded border border-gray-700 hover:border-chessAccent transition group relative ${cursorClass}" title="${desc}"><div class="flex justify-between items-center mb-1"><span class="text-[9px] text-gray-400 uppercase tracking-widest">${label}</span><i class="fa-solid ${icon} text-chessAccent text-[10px]"></i></div><div class="flex justify-between text-xs font-bold items-center h-5">${valueHtml}</div></div>`;
+    };
+
+    function renderGameMetricsGrid(metrics) {
+        const grid = document.getElementById('stats-grid');
+        const m = metrics;
+        let html = "";
+        html += createCard("Accuracy", m.white.accuracy + "%", m.black.accuracy + "%", "fa-crosshairs", false);
+        html += createCard("Intuition", m.white.intuition, m.black.intuition, "fa-brain", false);
+        html += createCard("Tactics", m.white.tactics, m.black.tactics, "fa-bolt", false);
+        html += createCard("Opening Acc", m.white.opening_accuracy, m.black.opening_accuracy, "fa-chess-pawn", false);
+        html += createCard("Midgame Acc", m.white.middlegame_accuracy || "-", m.black.middlegame_accuracy || "-", "fa-chess-knight", false);
+        html += createCard("Endgame Acc", m.white.endgame_accuracy, m.black.endgame_accuracy, "fa-flag-checkered", false);
+        html += createCard("Aggression", m.white.aggression, m.black.aggression, "fa-fire", false);
+        html += createCard("Attack", m.white.attack, m.black.attack, "fa-crosshairs", false);
+        html += createCard("Defense", m.white.defence, m.black.defence, "fa-shield-halved", false);
+        html += createCard("Resourceful", m.white.resourcefulness, m.black.resourcefulness, "fa-shield-heart", false);
+        html += createCard("Pressure", m.white.pressure_handling, m.black.pressure_handling, "fa-weight-hanging", false);
+        html += createCard("Calculation", m.white.calculation, m.black.calculation, "fa-calculator", false);
+        html += createCard("Strategy", m.white.strategic, m.black.strategic, "fa-compass", false);
+        html += createCard("Volatility", m.white.volatility, m.black.volatility, "fa-wave-square", false);
+        html += createCard("Opening Theory", m.white.opening_theory, m.black.opening_theory, "fa-book", false);
+        html += createCard("Key Moments", m.white.key_moments_count, m.black.key_moments_count, "fa-key", false);
+        html += createCard("Missed Opp", m.white.missed_opportunities, m.black.missed_opportunities, "fa-face-frown", false);
+        html += createCard("Time Mgmt", m.white.time_management, m.black.time_management, "fa-hourglass-half", false);
+        grid.innerHTML = html;
+    }
+
+    function renderPositionMetrics(posData) {
+        const grid = document.getElementById('position-stats-grid');
+        const info = posData.move_info || {};
+        document.getElementById('pos-move-san').innerText = info.san || "Start";
+        
+        const clsEl = document.getElementById('pos-move-class');
+        const clsText = info.classification || "Explore";
+        clsEl.innerText = clsText;
+        document.getElementById('pos-move-time').innerText = info.time_spend || "-";
+        
+        let clsColor = "bg-gray-700 text-gray-400";
+        if(['Best','Brilliant', 'Great', 'Book', 'Good'].includes(clsText)) clsColor = "bg-green-900 text-green-300";
+        if(clsText === 'Blunder') clsColor = "bg-red-900 text-red-300";
+        if(['Mistake', 'Miss'].includes(clsText)) clsColor = "bg-orange-900 text-orange-300";
+        if(['Inaccuracy'].includes(clsText)) clsColor = "bg-yellow-900 text-yellow-300";
+        clsEl.className = `px-2 py-0.5 rounded text-[10px] font-bold ${clsColor}`;
+
+        const s = posData.static || {};
+        const g = posData.graph || {};
+        const d = posData.dynamic || {};
+        const p = s.pawn_structure || {};
+        const sp = s.space || { white: { score: 0 }, black: { score: 0 } };
+        
+        let html = "";
+        html += createCard("Material", s.material?.white, s.material?.black, "fa-gem", true);
+        html += createCard("Mobility", s.mobility?.white, s.mobility?.black, "fa-arrows-up-down-left-right", true);
+        html += createCard("Activity", s.activity?.white, s.activity?.black, "fa-person-running", true);
+        html += createCard("Space", sp.white?.score || 0, sp.black?.score || 0, "fa-maximize", true);
+        html += createCard("Center Ctrl", s.center_control?.white, s.center_control?.black, "fa-bullseye", true);
+        html += createCard("Attack", g.attack?.white, g.attack?.black, "fa-crosshairs", true);
+        html += createCard("Defense", g.defence?.white, g.defence?.black, "fa-shield-halved", true);
+        html += createCard("Connectivity", g.connectivity?.white, g.connectivity?.black, "fa-link", true);
+        html += createCard("Harmony", g.harmony?.white, g.harmony?.black, "fa-music", true);
+        html += createCard("Weakness", g.weakness?.white, g.weakness?.black, "fa-triangle-exclamation", true);
+        html += createCard("King Safety", g.king_safety?.white, g.king_safety?.black, "fa-crown", true);
+        html += createCard("Pawn Struct", p.white?.score || 0, p.black?.score || 0, "fa-chess-pawn", true);
+        html += `<div class="bg-gray-800 p-2 rounded border border-gray-700 hover:border-chessAccent transition group relative"><div class="flex justify-between items-center mb-1"><span class="text-[9px] text-gray-400 uppercase tracking-widest">Commonality</span></div><span class="text-white text-sm font-bold">${s.novelty || 0}%</span></div>`;
+        html += `<div class="bg-gray-800 p-2 rounded border border-gray-700 hover:border-chessAccent transition group relative"><div class="flex justify-between items-center mb-1"><span class="text-[9px] text-gray-400 uppercase tracking-widest">Complexity</span></div><span class="text-white text-sm font-bold">${d.complexity || 0}</span></div>`;
+        html += `<div class="bg-gray-800 p-2 rounded border border-gray-700 hover:border-chessAccent transition group relative"><div class="flex justify-between items-center mb-1"><span class="text-[9px] text-gray-400 uppercase tracking-widest">Criticality</span></div><span class="text-white text-sm font-bold">${d.criticality || 0}</span></div>`;
+        
+        grid.innerHTML = html;
+    }
+
+    function updateLiveStats(posData) {
+        lastPosData = posData;
+        const fenInput = document.getElementById('fen-input-pos');
+        if (fenInput) fenInput.value = posData.fen || game.fen();
+        
+        if (posData && posData.dynamic && posData.dynamic.eval) {
+            const ev = posData.dynamic.eval;
+            let rawVal = ev.value;
+            let displayVal = (rawVal / 100).toFixed(2);
+            if (ev.type === 'mate') {
+                displayVal = `M${Math.abs(rawVal)}`;
+                rawVal = rawVal > 0 ? 1000 : -1000;
+            }
+
+            const evalBar = document.getElementById('eval-bar');
+            evalBar.innerText = `Eval: ${displayVal}`;
+            
+            const maxCp = 500;
+            const clampedVal = Math.max(-maxCp, Math.min(maxCp, rawVal));
+            let r, g, b;
+            
+            if (clampedVal > 0) {
+                const factor = clampedVal / maxCp;
+                r = Math.round(55 + (255 - 55) * factor);
+                g = Math.round(65 + (255 - 65) * factor);
+                b = Math.round(81 + (255 - 81) * factor);
+                if (factor > 0.5) { evalBar.classList.remove('text-chessAccent', 'text-white'); evalBar.classList.add('text-black'); } 
+                else { evalBar.classList.remove('text-black'); evalBar.classList.add('text-chessAccent'); }
+            } else {
+                const factor = Math.abs(clampedVal) / maxCp;
+                r = Math.round(55 * (1 - factor));
+                g = Math.round(65 * (1 - factor));
+                b = Math.round(81 * (1 - factor));
+                evalBar.classList.remove('text-black'); evalBar.classList.add('text-chessAccent');
+            }
+            evalBar.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        if (posData && posData.static && posData.static.phase) {
+            const phase = posData.static.phase; 
+            const pBadge = document.getElementById('game-phase-badge');
+            pBadge.innerText = phase;
+            pBadge.classList.remove('hidden');
+            let baseClasses = "w-24 flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold font-mono uppercase tracking-wider ";
+            if(phase === "Opening") pBadge.className = baseClasses + "bg-blue-900 text-blue-300 border border-blue-700";
+            else if(phase === "Middlegame") pBadge.className = baseClasses + "bg-purple-900 text-purple-300 border border-purple-700";
+            else if(phase === "Endgame") pBadge.className = baseClasses + "bg-pink-900 text-pink-300 border border-pink-700";
+            else pBadge.className = baseClasses + "bg-gray-700 text-gray-400 border border-gray-600";
+        }
+        if (!document.getElementById('tab-content-position').classList.contains('hidden')) renderPositionMetrics(posData);
+        if (originalPositions.length > 0 && !document.getElementById('tab-content-game').classList.contains('hidden')) drawEvalGraph(originalPositions, currentMoveIndex);
+    }
+
+    // --- GAME LOAD INIT ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Use new key from games.html
+        const selectedPGN = localStorage.getItem('analyze_pgn');
+        
+        // Restore names if available so UI isn't empty while loading
+        const w = localStorage.getItem('analyze_white');
+        const b = localStorage.getItem('analyze_black');
+        if(w) whiteName = w;
+        if(b) blackName = b;
+        updatePlayerLabels();
+        
+        if (selectedPGN) {
+            // Found a selected game, start analysis
+            // We do NOT remove it here so refresh works, or user can go back easily
+            startAnalysis(selectedPGN);
+        } else {
+             // No game selected -> Redirect to search
+             window.location.href = '/analyze-game';
+        }
+    });
+
+    async function startAnalysis(pgnText) {
+        try {
+            // Updated Endpoint: /api/analyze-pgn
+            const url = '/api/analyze-pgn';
+            const body = { pgn: pgnText };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); 
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try { handleStreamMessage(JSON.parse(line)); } catch (e) {}
+                }
+            }
+        } catch (err) { 
+            document.getElementById('stats-grid').innerHTML = `<div class="text-red-500 text-center col-span-3 p-4">Error: ${err.message}</div>`; 
+        }
+    }
+</script>
+{% endblock %}
