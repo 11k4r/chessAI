@@ -9,6 +9,7 @@ import threading
 import queue
 import io
 import chess.pgn
+import stat
 
 # Ensure the local chessAI package can be imported
 sys.path.append(os.getcwd())
@@ -29,6 +30,25 @@ except ImportError:
 
 app = Flask(__name__)
 
+# --- HELPER: Get Engine Path ---
+def get_engine_path():
+    """Returns the correct engine binary path based on the OS."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    if sys.platform == 'win32':
+        # Windows
+        path = os.path.join(base_dir, "engines", "stockfish.exe")
+    else:
+        # Linux (Render) / Mac
+        path = os.path.join(base_dir, "engines", "stockfish")
+        
+        # Ensure it is executable (Linux only)
+        if os.path.exists(path):
+            st = os.stat(path)
+            os.chmod(path, st.st_mode | stat.S_IEXEC)
+            
+    return path
+
 # --- CONFIGURATION ---
 SITE_CONFIG = {
     "site_name": "ChessAI",
@@ -48,12 +68,10 @@ def home():
 
 @app.route('/analyze-game')
 def games_page():
-    # Updated: Points to the game selection screen
     return render_template('games.html', **SITE_CONFIG)
 
 @app.route('/analyzer')
 def analyzer_page():
-    # New route: The actual analysis board
     return render_template('analyze.html', **SITE_CONFIG)
 
 @app.route('/guide')
@@ -115,9 +133,9 @@ def analyze_position():
         return jsonify({"error": "No FEN provided"}), 400
 
     try:
-        engine_path = os.path.join("engines", "stockfish.exe")
+        engine_path = get_engine_path()
         if not os.path.exists(engine_path):
-             return jsonify({"error": "Stockfish not found"}), 500
+             return jsonify({"error": f"Stockfish binary not found at {engine_path}"}), 500
 
         analyzer = ChessAnalyzer(engine_path=engine_path)
         with EngineHandler(engine_path) as engine:
@@ -157,8 +175,9 @@ def analyze_pgn_stream():
             })
 
             # 2. Run Analysis
-            engine_path = os.path.join("engines", "stockfish.exe")
-            if not os.path.exists(engine_path): raise Exception(f"Stockfish not found")
+            engine_path = get_engine_path()
+            if not os.path.exists(engine_path): 
+                raise Exception(f"Stockfish not found at {engine_path}")
 
             analyzer = ChessAnalyzer(engine_path=engine_path)
             
