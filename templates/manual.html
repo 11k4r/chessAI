@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-[80vh] flex flex-col items-center justify-center text-center px-6">
+    
+    <div class="glass-panel p-12 rounded-3xl max-w-2xl w-full border border-yellow-500/10 relative overflow-hidden">
+        
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-yellow-500/5 blur-3xl rounded-full pointer-events-none"></div>
+
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-800 rounded-2xl mb-8 text-yellow-500 shadow-lg shadow-black/50">
+            <i class="fa-solid fa-book-open text-4xl"></i>
+        </div>
+
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white">
+            User Manual
+            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-yellow-200 mt-2">
+                Coming Soon
+            </span>
+        </h1>
+
+        <p class="text-slate-400 text-lg leading-relaxed mb-8 max-w-lg mx-auto">
+            We are currently compiling comprehensive documentation, feature guides, and tutorials to help you master the full potential of chessAI 360.
+        </p>
+
+        <a href="/" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500 hover:text-white transition-colors">
+            <i class="fa-solid fa-arrow-left"></i>
+            Return Home
+        </a>
+    </div>
+
+</div>
+{% endblock %}

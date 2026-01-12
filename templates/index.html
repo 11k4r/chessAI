@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-32 px-6 flex flex-col items-center text-center">
+    
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+        {{ tagline }}<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-yellow-200">
+            Master the Board
+        </span>
+    </h1>
+    
+    <p class="mt-4 max-w-2xl text-lg md:text-xl text-slate-400 mb-12 leading-relaxed">
+        {{ sub_tagline }}
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-6 justify-center">
+        <a href="/analyze-game" class="nav-link bg-yellow-500 text-slate-900 px-10 py-4 rounded-xl text-lg font-bold hover:bg-yellow-400 transition transform hover:scale-105 shadow-2xl shadow-yellow-500/20">
+            Get Started
+        </a>
+        <a href="/manual" class="nav-link glass-panel border border-slate-700 px-10 py-4 rounded-xl text-lg font-medium hover:border-white transition flex items-center justify-center">
+            Learn More
+        </a>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div class="glass-panel p-8 rounded-2xl">
+            <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mb-6 text-yellow-500">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Transparent AI</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+                We don't just show the best move. By leveraging Stockfish's classical parameters, we translate complex engine data into human-readable metrics—explaining the <em>why</em>.
+            </p>
+        </div>
+
+        <div class="glass-panel p-8 rounded-2xl border-yellow-500/20">
+            <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mb-6 text-yellow-500">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Dynamic Profiling</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+                Go beyond single-game analysis. Our AI aggregates data across your history to extract deep insights, building a living profile that reveals your unique chess DNA.
+            </p>
+        </div>
+
+        <div class="glass-panel p-8 rounded-2xl">
+            <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center mb-6 text-yellow-500">
+                <i class="fa-solid fa-feather"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">Premium & Free</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+                Enjoy a distraction-free, glassmorphic interface designed for focus. Connect seamlessly to Chess.com or Lichess and access next-gen analysis tools completely free.
+            </p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

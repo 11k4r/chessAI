@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }}</title>
+    <script src="/static/js/tailwind.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="min-h-screen flex flex-col">
+    
+    <nav class="sticky top-0 z-50 glass-panel border-b border-white/5 py-4 flex items-center">
+        <div class="max-w-7xl mx-auto px-6 w-full flex items-center justify-between relative">
+            
+            <div class="z-10 flex items-center">
+                <a href="/" class="nav-link flex items-center gap-3">
+                    <img src="{{ url_for('static', filename='images/knight.png') }}" 
+                         alt="Knight Icon" 
+                         class="h-10 w-auto object-contain block"
+                         onerror="this.style.display='none';">
+                    
+                    <img src="{{ url_for('static', filename='images/text_trans.png') }}" 
+                         alt="{{ site_name }} Logo" 
+                         class="h-10 w-auto object-contain block"
+                         onerror="this.style.display='none'; if(this.previousElementSibling.style.display === 'none') this.nextElementSibling.style.display='flex';">
+                    
+                    <div class="hidden w-10 h-10 bg-yellow-500 rounded-full items-center justify-center text-slate-900">
+                        <i class="fa-solid fa-chess-knight text-xl"></i>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="hidden md:flex items-center gap-12 text-sm font-bold uppercase tracking-[0.2em] text-slate-400 pointer-events-auto">
+                    <a href="/analyze-game" class="nav-link hover:text-yellow-500 transition-all duration-300">Analyze</a>
+                    <a href="/manual" class="nav-link hover:text-yellow-500 transition-all duration-300">Manual</a>
+                </div>
+            </div>
+
+            <div class="w-24 h-10 flex-shrink-0 hidden md:block"></div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="flex-grow transition-opacity duration-200">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="py-8 border-t border-white/5 text-center text-slate-500 text-xs">
+        &copy; 2026 {{ site_name }}. All rights reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('.nav-link');
+            if (link && link.href && link.href.startsWith(window.location.origin)) {
+                e.preventDefault();
+                const targetUrl = link.href;
+                if (window.location.href === targetUrl) return;
+                loadPage(targetUrl);
+            }
+        });
+
+        async function loadPage(url) {
+            const main = document.getElementById('main-content');
+            main.classList.add('loading', 'opacity-50'); // Visual feedback
+
+            try {
+                const response = await fetch(url);
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                const newContent = newDoc.querySelector('#main-content').innerHTML;
+                const newTitle = newDoc.querySelector('title').innerText;
+
+                history.pushState({}, '', url);
+                document.title = newTitle;
+
+                // Clear and replace content
+                main.innerHTML = '';
+                main.innerHTML = newContent;
+                
+                // --- SCRIPT RELOADING LOGIC (Your Fix) ---
+                const scripts = main.querySelectorAll('script');
+                for (const oldScript of scripts) {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        // Scope inline scripts and expose specific functions to window
+                        const wrappedCode = `(function() {
+                            ${oldScript.innerHTML}
+                            if (typeof handleSearch === 'function') window.handleSearch = handleSearch;
+                            if (typeof setupObserver === 'function') window.setupObserver = setupObserver;
+                            if (typeof initStockfish === 'function') window.initStockfish = initStockfish;
+                        })();`;
+                        newScript.appendChild(document.createTextNode(wrappedCode));
+                    }
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                }
+                // -----------------------------------------
+
+                window.scrollTo(0, 0);
+            } catch (err) {
+                console.error('Navigation failed:', err);
+                window.location.href = url; // Fallback to full reload
+            } finally {
+                main.classList.remove('loading', 'opacity-50');
+            }
+        }
+
+        window.addEventListener('popstate', () => {
+            loadPage(window.location.href);
+        });
+    </script>
+</body>
+</html>

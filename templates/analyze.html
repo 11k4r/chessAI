@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+
+<div class="max-w-4xl mx-auto px-6 py-12">
+    
+    <div id="main-header" class="text-center mb-12">
+        <h1 class="text-4xl font-extrabold text-white mb-4">Analyze Your Games</h1>
+        <p class="text-slate-400">Import your history directly from Chess.com</p>
+    </div>
+
+    <div id="import-view" class="glass-panel p-8 rounded-2xl max-w-lg mx-auto transition-all duration-300">
+        
+        <div class="flex gap-4 mb-8 border-b border-white/10 pb-4">
+            <button class="flex-1 pb-2 text-yellow-500 border-b-2 border-yellow-500 font-bold text-sm uppercase tracking-wider">
+                <i class="fa-solid fa-chess-pawn mr-2"></i> Chess.com
+            </button>
+            <button class="flex-1 pb-2 text-slate-600 font-bold text-sm uppercase tracking-wider cursor-not-allowed" title="Coming Soon">
+                <i class="fa-solid fa-horse-head mr-2"></i> Lichess
+            </button>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Username</label>
+                <input type="text" id="username-input" 
+                       class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all placeholder-slate-600"
+                       placeholder="e.g. MagnusCarlsen">
+            </div>
+
+            <button onclick="fetchGames()" id="fetch-btn" 
+                    class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 rounded-xl transition-all transform active:scale-95 shadow-lg shadow-yellow-500/20">
+                <span id="btn-text">Find Games</span>
+                <i id="btn-loader" class="fa-solid fa-circle-notch fa-spin hidden ml-2"></i>
+            </button>
+
+            <div id="error-msg" class="hidden text-red-400 text-sm text-center bg-red-400/10 p-3 rounded-lg border border-red-400/20"></div>
+        </div>
+    </div>
+
+   <div id="games-list-view" class="hidden animate-fade-in">
+
+		<div class="glass-panel p-4 rounded-xl mb-6 flex flex-wrap gap-4 justify-between items-center">
+			
+			<div class="flex gap-2">
+				<button onclick="toggleFilter('bullet')" id="filter-bullet" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-purple-500/50 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 transition-all">Bullet</button>
+				<button onclick="toggleFilter('blitz')" id="filter-blitz" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-yellow-500/50 text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all">Blitz</button>
+				<button onclick="toggleFilter('rapid')" id="filter-rapid" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-blue-500/50 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 transition-all">Rapid</button>
+			</div>
+
+			<div class="flex gap-2">
+				<button onclick="toggleFilter('win')" id="filter-win" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-green-500/50 text-green-400 bg-green-500/10 hover:bg-green-500/20 transition-all">Win</button>
+				<button onclick="toggleFilter('draw')" id="filter-draw" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-slate-500/50 text-slate-400 bg-slate-500/10 hover:bg-slate-500/20 transition-all">Draw</button>
+				<button onclick="toggleFilter('loss')" id="filter-loss" class="filter-btn active px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-all">Loss</button>
+			</div>
+
+			<div class="flex gap-2 border-l border-white/10 pl-4">
+				<button onclick="resetFilters(true)" class="text-xs font-bold text-white hover:text-yellow-500 transition-colors">All</button>
+				<button onclick="resetFilters(false)" class="text-xs font-bold text-slate-500 hover:text-white transition-colors">Clear</button>
+			</div>
+		</div>
+
+		<div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-white">Recent Games</h2>
+            <button onclick="resetView()" class="text-xs text-slate-400 hover:text-white uppercase tracking-wider font-bold">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Search Again
+            </button>
+        </div>
+
+        <div id="games-container" class="grid gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
+            </div>
+
+        <div id="scroll-loader" class="hidden text-center py-4 text-slate-500 text-xs uppercase tracking-widest">
+            <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Loading more...
+        </div>
+
+    </div>
+	
+	
+	<div id="dashboard-view" class="hidden animate-fade-in space-y-6">
+    
+	<div class="flex items-center justify-between mb-8">
+        <button onclick="resetView()" class="text-slate-400 hover:text-white font-bold uppercase text-xs tracking-wider transition-colors">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Games
+        </button>
+        <h2 class="text-xl font-bold text-white">Analysis Board</h2>
+    </div>
+
+    <div class="max-w-xl mx-auto space-y-6">
+        
+        <div class="glass-panel p-2 rounded-xl shadow-2xl shadow-black/50">
+            <div id="board" class="w-full"></div>
+        </div>
+        
+        <div class="glass-panel p-3 rounded-xl flex justify-center gap-4">
+            <button onclick="boardConfig.start()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
+            <button onclick="boardConfig.prev()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="boardConfig.flip()" class="p-3 rounded-lg hover:bg-white/10 text-yellow-500 hover:text-yellow-400 transition-colors" title="Flip Board"><i class="fa-solid fa-retweet"></i></button>
+            <button onclick="boardConfig.next()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Next"><i class="fa-solid fa-chevron-right"></i></button>
+            <button onclick="boardConfig.end()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="End"><i class="fa-solid fa-forward-fast"></i></button>
+        </div>
+
+    </div>
+	
+</div>
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+// ==========================================
+// 1. CONFIG & STATE
+// ==========================================
+const TIME_STYLES = {{ tc_styles | tojson }};
+
+// Global State
+let allGamesCache = [];      
+let currentGamesList = [];   
+let availableArchives = [];  
+let archiveIndex = 0;        
+let currentOffset = 0;       
+let currentUserCache = "";   
+let isLoading = false;       
+
+let activeFilters = {
+    bullet: true, blitz: true, rapid: true,
+    win: true, draw: true, loss: true
+};
+
+const BATCH_SIZE = 10;      
+
+// ==========================================
+// 2. DASHBOARD & ANALYSIS LOGIC
+// ==========================================
+
+
+async function selectGame(url, pgn) {
+    // Optional: Show loading spinner here
+    
+    try {
+        // A. Parse PGN
+        const chess = new Chess();
+        
+        // Pass raw PGN to preserve headers/newlines
+        if (!chess.load_pgn(pgn)) {
+            throw new Error("Invalid PGN format");
+        }
+
+        // B. Generate FEN History
+        const fens = [];
+        const replayChess = new Chess(); 
+        fens.push(replayChess.fen()); 
+        
+        const moves = chess.history();
+        moves.forEach(move => {
+            replayChess.move(move);
+            fens.push(replayChess.fen());
+        });
+
+        // C. Run Batch Analysis
+        // We pass an empty callback () => {} to silence the progress logs
+        const results = await chessEngine.analyzeGameBatch(fens, (current, total) => {
+            // Logic for visual progress bar will go here later
+        });
+
+        // D. Render Dashboard
+        renderDashboard(results, pgn);
+
+    } catch (e) {
+        console.error("Analysis Failed:", e);
+        // Keep error alerts for now so you know if something breaks
+        alert("Error during analysis: " + e.message);
+    }
+}
+
+// ==========================================
+// 3. UI HANDLERS
+// ==========================================
+
+function handleClick(index) {
+    const game = currentGamesList[index];
+    if (game) {
+        selectGame(game.url, game.pgn);
+    }
+}
+window.handleClick = handleClick;
+
+// ==========================================
+// 4. FETCH & RENDER LIST LOGIC
+// ==========================================
+
+function toggleFilter(key) {
+    activeFilters[key] = !activeFilters[key];
+    updateFilterUI(key);
+    refreshGameList();
+}
+
+function resetFilters(enableAll) {
+    Object.keys(activeFilters).forEach(k => activeFilters[k] = enableAll);
+    Object.keys(activeFilters).forEach(k => updateFilterUI(k));
+    refreshGameList();
+}
+
+function updateFilterUI(key) {
+    const btn = document.getElementById(`filter-${key}`);
+    if (!btn) return; 
+    
+    if (activeFilters[key]) {
+        btn.classList.add('active', 'bg-opacity-10');
+        btn.classList.remove('opacity-25', 'grayscale');
+    } else {
+        btn.classList.remove('active', 'bg-opacity-10');
+        btn.classList.add('opacity-25', 'grayscale');
+    }
+}
+
+function refreshGameList() {
+    const container = document.getElementById('games-container');
+    container.innerHTML = '';
+    currentGamesList = []; 
+    
+    appendGamesToDOM(allGamesCache);
+    currentOffset = allGamesCache.length;
+    
+    if (container.scrollHeight <= container.clientHeight) {
+        renderNextBatch();
+    }
+}
+
+async function fetchGames() {
+    const username = document.getElementById('username-input').value.trim();
+    const btn = document.getElementById('fetch-btn');
+    const btnText = document.getElementById('btn-text');
+    const loader = document.getElementById('btn-loader');
+    const errorDiv = document.getElementById('error-msg');
+
+    if (!username) return;
+
+    // Reset State
+    allGamesCache = [];
+    currentGamesList = []; 
+    availableArchives = [];
+    archiveIndex = 0;
+    currentOffset = 0;
+    currentUserCache = username;
+    isLoading = false;
+
+    // UI Loading State
+    btn.disabled = true;
+    btn.classList.add('opacity-75');
+    btnText.innerText = "Searching...";
+    loader.classList.remove('hidden');
+    errorDiv.classList.add('hidden');
+    document.getElementById('games-container').innerHTML = ''; 
+
+    try {
+        const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`);
+        if (!archivesRes.ok) throw new Error('User not found');
+        
+        const archivesData = await archivesRes.json();
+        if (archivesData.archives.length === 0) throw new Error('No game history found.');
+
+        availableArchives = archivesData.archives.reverse();
+        await fetchNextMonth();
+
+        if (allGamesCache.length === 0) throw new Error('No games found in recent history.');
+        
+        document.getElementById('import-view').classList.add('hidden');
+        document.getElementById('games-list-view').classList.remove('hidden');
+        document.getElementById('main-header').classList.add('hidden'); 
+        
+        renderNextBatch();
+
+    } catch (err) {
+        errorDiv.innerText = err.message;
+        errorDiv.classList.remove('hidden');
+    } finally {
+        resetBtn();
+    }
+}
+
+async function fetchNextMonth() {
+    if (archiveIndex >= availableArchives.length) return false;
+
+    const url = availableArchives[archiveIndex];
+    archiveIndex++; 
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const newGames = data.games.reverse();
+    
+    allGamesCache = allGamesCache.concat(newGames);
+    return true; 
+}
+
+async function renderNextBatch() {
+    if (isLoading) return;
+    isLoading = true;
+
+    const loader = document.getElementById('scroll-loader');
+    const container = document.getElementById('games-container');
+    
+    loader.classList.remove('hidden');
+
+    if (currentOffset + BATCH_SIZE >= allGamesCache.length) {
+        await fetchNextMonth();
+    }
+
+    setTimeout(() => {
+        if (currentOffset >= allGamesCache.length) {
+            loader.classList.add('hidden');
+            isLoading = false;
+            return;
+        }
+
+        const batch = allGamesCache.slice(currentOffset, currentOffset + BATCH_SIZE);
+        appendGamesToDOM(batch);
+        currentOffset += BATCH_SIZE;
+        
+        loader.classList.add('hidden');
+        isLoading = false;
+
+        if (container.scrollHeight <= container.clientHeight && currentOffset < allGamesCache.length) {
+            renderNextBatch();
+        }
+        
+    }, 300);
+}
+
+function appendGamesToDOM(games) {
+    const container = document.getElementById('games-container');
+    const startIndex = currentGamesList.length;
+    currentGamesList = currentGamesList.concat(games);
+
+    games.forEach((game, i) => {
+        const globalIndex = startIndex + i;
+        const timeClass = game.time_class; 
+        const isWhite = game.white.username.toLowerCase() === currentUserCache.toLowerCase();
+        const opponent = isWhite ? game.black : game.white;
+        const myResult = isWhite ? game.white.result : game.black.result;
+        
+        let resultKey = 'loss';
+        if (myResult === 'win') resultKey = 'win';
+        else if (['agreed', 'repetition', 'stalemate', 'insufficient'].includes(myResult)) resultKey = 'draw';
+        
+        if (!activeFilters[timeClass]) return;
+        if (!activeFilters[resultKey]) return;
+        
+        let resultColor = 'text-slate-500'; 
+        let resultIcon = 'fa-minus';
+        
+        if (myResult === 'win') {
+            resultColor = 'text-green-400';
+            resultIcon = 'fa-trophy';
+        } else if (['checkmated', 'resigned', 'timeout', 'abandoned'].includes(myResult)) {
+            resultColor = 'text-red-400';
+            resultIcon = 'fa-xmark';
+        }
+
+        const timeColor = TIME_STYLES[timeClass] || 'text-slate-500'; 
+
+        const card = `
+            <div onclick="handleClick(${globalIndex})" 
+                 class="glass-panel p-4 rounded-xl flex items-center justify-between border-l-4 ${myResult === 'win' ? 'border-green-500' : (resultColor === 'text-red-400' ? 'border-red-500' : 'border-slate-500')} animate-fade-in cursor-pointer hover:bg-white/5 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center ${resultColor} bg-opacity-20">
+                        <i class="fa-solid ${resultIcon}"></i>
+                    </div>
+                    <div>
+                        <div class="text-white font-bold text-sm">vs. ${opponent.username} <span class="text-xs text-slate-500">(${opponent.rating})</span></div>
+                        <div class="text-xs font-bold uppercase tracking-wider ${timeColor}">
+                            ${timeClass} <span class="text-slate-500 font-normal capitalize">• ${new Date(game.end_time * 1000).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-xs font-bold uppercase tracking-wider ${resultColor}">
+                    ${myResult}
+                </div>
+            </div>
+        `;
+        container.innerHTML += card;
+    });
+}
+
+document.getElementById('games-container').addEventListener('scroll', function() {
+    const { scrollTop, scrollHeight, clientHeight } = this;
+    if (scrollTop + clientHeight >= scrollHeight - 50) {
+        renderNextBatch();
+    }
+});
+
+function resetView() {
+    document.getElementById('import-view').classList.remove('hidden');
+    document.getElementById('games-list-view').classList.add('hidden');
+    document.getElementById('username-input').value = '';
+    document.getElementById('main-header').classList.remove('hidden');
+}
+
+function resetBtn() {
+    const btn = document.getElementById('fetch-btn');
+    const btnText = document.getElementById('btn-text');
+    const loader = document.getElementById('btn-loader');
+    
+    btn.disabled = false;
+    btn.classList.remove('opacity-75');
+    btnText.innerText = "Find Games";
+    loader.classList.add('hidden');
+}
+
+window.fetchGames = fetchGames;
+window.toggleFilter = toggleFilter;
+window.resetFilters = resetFilters;
+window.resetView = resetView;
+
+
+// ==========================================
+// BOARD LOGIC & STATE
+// ==========================================
+let board = null;
+let gameHistory = []; // Array of FENs
+let currentMoveIndex = 0;
+
+// Expose controls to window for HTML buttons
+window.boardConfig = {
+    start: () => { currentMoveIndex = 0; updateBoard(); },
+    end: () => { currentMoveIndex = gameHistory.length - 1; updateBoard(); },
+    prev: () => { if (currentMoveIndex > 0) currentMoveIndex--; updateBoard(); },
+    next: () => { if (currentMoveIndex < gameHistory.length - 1) currentMoveIndex++; updateBoard(); },
+    flip: () => { if(board) board.flip(); }
+};
+
+function initChessBoard(pgn) {
+    // 1. Replay game to generate FEN history
+    const chess = new Chess();
+    if (!chess.load_pgn(pgn)) return;
+    
+    gameHistory = [];
+    const replay = new Chess();
+    gameHistory.push(replay.fen()); // Start Position
+    
+    const moves = chess.history();
+    moves.forEach(m => {
+        replay.move(m);
+        gameHistory.push(replay.fen());
+    });
+    
+    currentMoveIndex = 0; // Reset to start
+
+    // 2. Destroy old board if exists (prevents duplicates)
+    if (board) board.destroy();
+
+    // 3. Initialize Chessboard.js with CDN Images
+    // 3. Initialize Chessboard.js with LOCAL Images
+    board = Chessboard('board', {
+        position: 'start',
+        draggable: false, 
+        pieceTheme: '/static/images/chesspieces/wikipedia/{piece}.png'
+    });
+    
+    // 4. Handle Resize
+    window.addEventListener('resize', board.resize);
+}
+
+function updateBoard() {
+    if (!gameHistory[currentMoveIndex]) return;
+    board.position(gameHistory[currentMoveIndex]);
+}
+
+
+function renderDashboard(analysisResults, originalPgn) {
+    // 1. Switch Views
+    document.getElementById('games-list-view').classList.add('hidden');
+    document.getElementById('import-view').classList.add('hidden');
+    document.getElementById('dashboard-view').classList.remove('hidden');
+
+    // 2. Initialize the Board
+    initChessBoard(originalPgn);
+
+    // 3. Log Metrics (As requested)
+    console.log("--- ANALYSIS COMPLETE ---");
+    console.log("Full Results:", analysisResults);
+    
+    // Log just the metrics for easy reading
+    if(analysisResults.data && analysisResults.data.length > 0) {
+        console.table(analysisResults.data.map(m => ({
+            Move: m.move_number,
+            Eval: m.eval,
+            Stress: m.stress,
+            Harmony: m.harmony
+        })));
+    }
+}
+
+
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script src="/static/js/analysis_client.js"></script>
+
+{% endblock %}
