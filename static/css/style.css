@@ -1,0 +1,71 @@
+/* --- Core Variables & Body Styles (Moved from base.html) --- */
+:root {
+    --chess-dark: #0f172a;
+    --chess-accent: #eab308;
+    --chess-gray: #1e293b;
+}
+
+body {
+    background-color: var(--chess-dark);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* --- Components --- */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Adjusted to match your original subtle border */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Transition effect for static feel (PJAX) */
+#main-content {
+    transition: opacity 0.2s ease-in-out;
+}
+#main-content.loading {
+    opacity: 0.5;
+}
+
+/* Ensure no gaps for the sticky nav */
+nav {
+    margin-top: 0 !important;
+}
+
+/* --- Utilities --- */
+/* Link Tailwind class to CSS variable */
+.bg-chessAccent {
+    background-color: var(--chess-accent) !important;
+}
+
+/* Ensure the loading bar has a physical height */
+#loading-bar {
+    height: 100% !important;
+    min-height: 8px;
+    display: block;
+}
+
+/* --- Scrollbar Customization --- */
+.custom-scrollbar::-webkit-scrollbar,
+::-webkit-scrollbar {
+    width: 6px; /* Matched to your original 6px preference */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
