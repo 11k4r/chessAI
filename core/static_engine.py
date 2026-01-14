@@ -64,7 +64,6 @@ class StaticEngine:
             line = self.process.stdout.readline()
             if not line: break
             output_lines.append(line)
-            
             # STOP CONDITION: Adapt this to your engine's output!
             # Example: Stockfish 'eval' usually ends with "Final evaluation"
             if "Final evaluation" in line or "Total Evaluation" in line:
@@ -72,7 +71,7 @@ class StaticEngine:
                 
             if time.time() - start > 0.5: # Safety break
                 break
-                
+         
         return "".join(output_lines)
 
 # Singleton helper

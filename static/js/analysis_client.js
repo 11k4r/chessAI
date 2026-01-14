@@ -30,7 +30,6 @@ class AnalysisClient {
             this.sendCommand('setoption name Hash value 128'); 
             
         } else {
-            console.warn("⚠️ High-Performance Mode: OFF. Headers missing. Falling back to 1 Thread.");
             this.sendCommand('setoption name Threads value 1');
             this.sendCommand('setoption name Hash value 32');
         }
@@ -38,7 +37,7 @@ class AnalysisClient {
         // --- 4. ENGINE SETTINGS ---
         // SF 17 specific: 'Use NNUE' is usually on by default, but good to force if available
         this.sendCommand('setoption name Use NNUE value true');
-        
+        this.sendCommand('setoption name MultiPV value 5');
         this.sendCommand('isready');
     }
 
@@ -67,8 +66,7 @@ class AnalysisClient {
     parseInfoLine(line) {
         if (!this.currentTask) return;
 
-        // Regex to extract depth, multipv, score, and pv (moves)
-        // Example: info depth 16 ... multipv 1 score cp 50 ... pv e2e4 c7c5
+
         const depthMatch = line.match(/depth (\d+)/);
         const multipvMatch = line.match(/multipv (\d+)/);
         const scoreMatch = line.match(/score (cp|mate) (-?\d+)/);
@@ -99,12 +97,35 @@ class AnalysisClient {
 
         const bestMove = bestMoveLine.split(' ')[1];
         
-        // Resolve the Promise with the collected data
+        // 1. Determine Turn Color from FEN
+        // FEN structure: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        // The second part ('w' or 'b') indicates the side to move.
+        const fenParts = this.currentTask.fen.split(' ');
+        const isBlack = (fenParts.length >= 2 && fenParts[1] === 'b');
+
+        // 2. Prepare Lines (Filter & Normalize)
+        const processedLines = this.currentTask.results
+            .filter(r => r) // Remove empty slots
+            .map(line => {
+                // Create a shallow copy to avoid mutating raw state
+                const newLine = { ...line };
+                
+                // NORMALIZE TO WHITE PERSPECTIVE
+                // Stockfish returns scores relative to the side to move.
+                // If it is Black's turn, we invert values so + is always White advantage.
+                // This applies to both Centipawns and Mate scores.
+                if (isBlack) {
+                    newLine.score = -newLine.score;
+                }
+                return newLine;
+            });
+
+        // 3. Resolve with Normalized Data
         if (this.currentTask.resolve) {
             this.currentTask.resolve({
                 fen: this.currentTask.fen,
                 best_move: bestMove,
-                top_lines: this.currentTask.results.filter(r => r) // Remove empty slots
+                top_lines: processedLines 
             });
         }
         
@@ -133,7 +154,7 @@ class AnalysisClient {
         this.currentTask = this.queue.shift();
                 
         this.sendCommand(`position fen ${this.currentTask.fen}`);
-        this.sendCommand(`go depth ${this.currentTask.targetDepth}`);
+        this.sendCommand(`go depth ${10}`);
     }
 
     /**
@@ -141,13 +162,12 @@ class AnalysisClient {
      * Loops through an entire game's FEN list, analyzes them locally,
      * and sends the big bundle to the Server.
      */
-    async analyzeGameBatch(fenList, updateProgressCallback) {
+    async analyzeGameBatch(pgn, fenList, updateProgressCallback) {
         const batchData = [];
         
-        // 1. Reset the engine ONCE at the start of the game
+        // 1. Reset the engine
         this.sendCommand('ucinewgame');
         this.sendCommand('isready');
-        // We give it a tiny delay to ensure it's ready (optional but safer)
         await new Promise(r => setTimeout(r, 50));
 
         for (let i = 0; i < fenList.length; i++) {
@@ -157,31 +177,34 @@ class AnalysisClient {
                 updateProgressCallback(i + 1, fenList.length);
             }
 
-            // 2. Run Analysis (Depth 12 is usually the sweet spot for browser batch)
-            const dynamicResult = await this.evaluate(fen, 2);
+            const dynamicResult = await this.evaluate(fen, 10);
+			
+			let whiteEval = 0;
+            if (dynamicResult.top_lines && dynamicResult.top_lines.length > 0) {
+                const bestLine = dynamicResult.top_lines[0];
+                whiteEval = bestLine.score;
+            }
             
             batchData.push({
                 fen: fen,
-                dynamic_data: dynamicResult
+				whiteEval: whiteEval,
+                dynamic_data: dynamicResult,
             });
         }
 
-        console.log("Sending Batch to Server...", batchData);
         
         try {
+            // UPDATED: Send 'pgn' along with 'positions'
             const response = await fetch('/api/analyze-batch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ positions: batchData })
+                body: JSON.stringify({ 
+                    pgn: pgn,          
+                    positions: batchData 
+                })
             });
 
-            console.log("Server responded with status:", response.status);
-
-            // 1. Get RAW TEXT first to debug
             const textData = await response.text();
-            console.log("Raw Server Response (First 100 chars):", textData.substring(0, 100));
-
-            // 2. Then parse it
             const json = JSON.parse(textData);
             return json;
 

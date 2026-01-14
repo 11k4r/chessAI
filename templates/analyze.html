@@ -4,14 +4,14 @@
 {% block content %}
 <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
 
-<div class="max-w-4xl mx-auto px-6 py-12">
+<div class="w-full min-h-screen px-4 py-6">
     
     <div id="main-header" class="text-center mb-12">
         <h1 class="text-4xl font-extrabold text-white mb-4">Analyze Your Games</h1>
         <p class="text-slate-400">Import your history directly from Chess.com</p>
     </div>
 
-    <div id="import-view" class="glass-panel p-8 rounded-2xl max-w-lg mx-auto transition-all duration-300">
+    <div id="import-view" class="glass-panel p-8 rounded-2xl max-w-lg mx-auto mt-20 transition-all duration-300">
         
         <div class="flex gap-4 mb-8 border-b border-white/10 pb-4">
             <button class="flex-1 pb-2 text-yellow-500 border-b-2 border-yellow-500 font-bold text-sm uppercase tracking-wider">
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-   <div id="games-list-view" class="hidden animate-fade-in">
+   <div id="games-list-view" class="hidden animate-fade-in max-w-4xl mx-auto">
 
 		<div class="glass-panel p-4 rounded-xl mb-6 flex flex-wrap gap-4 justify-between items-center">
 			
@@ -78,33 +78,147 @@
 
     </div>
 	
-	
-	<div id="dashboard-view" class="hidden animate-fade-in space-y-6">
+	<div id="dashboard-view" class="hidden animate-fade-in h-[85vh] w-full max-w-[1800px] mx-auto">
     
-	<div class="flex items-center justify-between mb-8">
-        <button onclick="resetView()" class="text-slate-400 hover:text-white font-bold uppercase text-xs tracking-wider transition-colors">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Games
-        </button>
-        <h2 class="text-xl font-bold text-white">Analysis Board</h2>
-    </div>
-
-    <div class="max-w-xl mx-auto space-y-6">
-        
-        <div class="glass-panel p-2 rounded-xl shadow-2xl shadow-black/50">
-            <div id="board" class="w-full"></div>
+        <div class="flex items-center justify-between mb-4 h-[5%]">
+            <button onclick="resetView()" class="text-slate-400 hover:text-white font-bold uppercase text-xs tracking-wider transition-colors">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Games
+            </button>
+            <h2 class="text-xl font-bold text-white">Analysis Board</h2>
         </div>
-        
-        <div class="glass-panel p-3 rounded-xl flex justify-center gap-4">
-            <button onclick="boardConfig.start()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
-            <button onclick="boardConfig.prev()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Previous"><i class="fa-solid fa-chevron-left"></i></button>
-            <button onclick="boardConfig.flip()" class="p-3 rounded-lg hover:bg-white/10 text-yellow-500 hover:text-yellow-400 transition-colors" title="Flip Board"><i class="fa-solid fa-retweet"></i></button>
-            <button onclick="boardConfig.next()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="Next"><i class="fa-solid fa-chevron-right"></i></button>
-            <button onclick="boardConfig.end()" class="p-3 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors" title="End"><i class="fa-solid fa-forward-fast"></i></button>
-        </div>
+    
+        <div class="flex flex-row gap-6 h-[95%] items-stretch">
+            
+            <div class="flex flex-col w-[75vh] min-w-[500px] gap-2">
+                
+                <div class="flex justify-end gap-2 h-8 flex-none">
+                    <div id="time-control-box" class="flex items-center justify-center px-4 rounded-md bg-slate-800 border border-slate-700 font-bold text-xs uppercase tracking-wider text-slate-400">-</div>
+                    <div id="eval-box" class="flex items-center justify-center w-16 rounded-md bg-slate-600 font-bold text-xs text-white transition-colors duration-300 border border-white/10 shadow-lg">0.0</div>
+                </div>
 
+                <div id="player-top" class="flex justify-between items-end px-2 pb-1 border-b border-white/10 h-8 flex-none"></div>
+
+                <div class="glass-panel p-2 rounded-xl shadow-2xl shadow-black/50 flex-1 relative flex items-center bg-black/20">
+                    <div id="board" class="w-full h-full"></div>
+                </div>
+
+                <div id="player-bottom" class="flex justify-between items-start px-2 pt-1 border-t border-white/10 h-8 flex-none"></div>
+                
+                </div>
+    
+           <div class="flex-1 glass-panel rounded-xl p-6 relative overflow-hidden h-full flex flex-col min-h-0">
+                
+                <div class="w-full h-32 mb-6 relative border-2 border-black rounded-md overflow-hidden flex-none">
+                    <canvas id="evalGraph"></canvas>
+                </div>
+
+                <div class="flex-none mb-4 space-y-3">
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="text-3xl font-bold text-white">12. e4</span>
+                            <div class="px-3 py-1 rounded-md bg-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-500/30 shadow-[0_0_10px_rgba(52,211,153,0.2)]">
+                                Best Move
+                            </div>
+                        </div>
+                        <div class="text-slate-400 font-mono text-sm font-bold">
+                            <i class="fa-regular fa-clock mr-2"></i>0:45s
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-white/5 p-1.5 rounded-lg border border-white/5">
+                        
+                        <div class="flex gap-2">
+                            <button onclick="setViewMode('absolute')" class="px-4 py-1.5 rounded bg-slate-700 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all hover:bg-slate-600">Absolute</button>
+                            <button onclick="setViewMode('relative')" class="px-4 py-1.5 rounded text-slate-500 hover:text-white hover:bg-white/5 text-[10px] font-bold uppercase tracking-wider transition-all">Relative</button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="setPerspective('white')" class="px-4 py-1.5 rounded bg-white text-black text-[10px] font-bold uppercase tracking-wider shadow-sm hover:bg-gray-200">White</button>
+                            <button onclick="setPerspective('black')" class="px-4 py-1.5 rounded text-slate-500 hover:text-white hover:bg-white/5 text-[10px] font-bold uppercase tracking-wider transition-all">Black</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 min-h-0 grid grid-cols-2 gap-4 mb-4">
+                    
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-center shadow-inner">
+                        <h3 class="text-[10px] font-bold text-yellow-500 uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1">Positional Strategy</h3>
+                        <div class="space-y-3" id="group-positional">
+                            </div>
+                    </div>
+
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-center shadow-inner">
+                        <h3 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1">Piece Coordination</h3>
+                        <div class="space-y-3" id="group-coordination"></div>
+                    </div>
+
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-center shadow-inner">
+                        <h3 class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1">Tactical Sharpness</h3>
+                        <div class="space-y-3" id="group-tactical"></div>
+                    </div>
+
+                    <div class="bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-center shadow-inner">
+                        <h3 class="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1">Territory & Structure</h3>
+                        <div class="space-y-3" id="group-territory"></div>
+                    </div>
+
+                    <div class="col-span-2 bg-black/20 rounded-xl p-3 border border-white/5 flex flex-col justify-center shadow-inner">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1">Time & Decisions</h3>
+                        <div class="grid grid-cols-3 gap-6">
+                            
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1">Time Spent</span>
+                                <span id="metric-time" class="text-lg font-mono text-white font-bold">-</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center border-l border-white/5 pl-2">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1">Move Quality</span>
+                                <span id="metric-class" class="text-sm font-bold text-white uppercase tracking-wider">-</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center border-l border-white/5 pl-2">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold mb-1">Stress</span>
+                                <div class="w-full flex items-center gap-2">
+                                    <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <div id="bar-stress" class="w-0 bg-red-500 h-full transition-all duration-300"></div>
+                                    </div>
+                                    <span id="val-stress" class="text-[10px] font-mono text-slate-400 w-6 text-right">0.0</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="flex-none mt-auto space-y-4">
+                    
+                    <div class="flex justify-center gap-3">
+                        <button onclick="boardConfig.start()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors text-sm"><i class="fa-solid fa-backward-fast"></i></button>
+                        <button onclick="boardConfig.prev()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors text-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button onclick="boardConfig.flip()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-yellow-500 hover:text-yellow-400 transition-colors text-sm"><i class="fa-solid fa-retweet"></i></button>
+                        <button onclick="boardConfig.next()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors text-sm"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="boardConfig.end()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors text-sm"><i class="fa-solid fa-forward-fast"></i></button>
+                    </div>
+
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chess-board text-slate-500 text-sm"></i>
+                        </div>
+                        <input type="text" id="fen-box" readonly 
+                               class="w-full bg-black/30 border border-slate-700 text-slate-400 text-xs font-mono rounded-xl pl-12 pr-12 py-3 focus:outline-none focus:border-yellow-500/50 transition-colors cursor-text select-all"
+                               value="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">
+                        
+                        <button onclick="copyFen()" class="absolute inset-y-0 right-0 px-4 text-slate-500 hover:text-white transition-colors" title="Copy FEN">
+                            <i class="fa-regular fa-copy text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+    
+        </div>
     </div>
-	
-</div>
 
 </div>
 
@@ -134,26 +248,40 @@ let activeFilters = {
     win: true, draw: true, loss: true
 };
 
+
+let gameHeaders = {};
+let evalChart = null;
+
 const BATCH_SIZE = 10;      
+let currentAnalysisData = [];
+
+const UI_GROUPS = {
+    'group-positional':   ['KingSafety', 'PawnStructure', 'CenterControl'],
+    'group-coordination': ['Activity', 'Harmony', 'Mobility'], // Re-ordered slightly
+    'group-tactical':     ['Material', 'Threats', 'Aggression'],
+    'group-territory':    ['Space', 'Squeeze', 'Integrity', 'Weakness'] // 'Weakness' matches server key
+};
+
+let viewMode = 'absolute'; // 'absolute' or 'relative'
+let perspective = 'white'; // 'white' or 'black'
+let moveTimes = []; // Cache for calculated move times
 
 // ==========================================
 // 2. DASHBOARD & ANALYSIS LOGIC
 // ==========================================
 
 
-async function selectGame(url, pgn) {
-    // Optional: Show loading spinner here
-    
-    try {
-        // A. Parse PGN
-        const chess = new Chess();
-        
-        // Pass raw PGN to preserve headers/newlines
-        if (!chess.load_pgn(pgn)) {
-            throw new Error("Invalid PGN format");
-        }
+async function selectGame(game) {
+    const pgn = game.pgn;
+    parseMoveTimes(pgn);
+    // Determine User Color
+    const isBlack = game.black.username.toLowerCase() === currentUserCache.toLowerCase();
+    const userSide = isBlack ? 'black' : 'white';
 
-        // B. Generate FEN History
+    try {
+        const chess = new Chess();
+        if (!chess.load_pgn(pgn)) throw new Error("Invalid PGN");
+
         const fens = [];
         const replayChess = new Chess(); 
         fens.push(replayChess.fen()); 
@@ -164,19 +292,16 @@ async function selectGame(url, pgn) {
             fens.push(replayChess.fen());
         });
 
-        // C. Run Batch Analysis
-        // We pass an empty callback () => {} to silence the progress logs
-        const results = await chessEngine.analyzeGameBatch(fens, (current, total) => {
-            // Logic for visual progress bar will go here later
-        });
+        const results = await chessEngine.analyzeGameBatch(pgn, fens, () => {});
 
-        // D. Render Dashboard
-        renderDashboard(results, pgn);
+        // Pass extra details to renderDashboard
+		
+        renderDashboard(results, pgn, userSide, game.time_class);
+		
 
     } catch (e) {
         console.error("Analysis Failed:", e);
-        // Keep error alerts for now so you know if something breaks
-        alert("Error during analysis: " + e.message);
+        alert("Error: " + e.message);
     }
 }
 
@@ -187,7 +312,7 @@ async function selectGame(url, pgn) {
 function handleClick(index) {
     const game = currentGamesList[index];
     if (game) {
-        selectGame(game.url, game.pgn);
+        selectGame(game);
     }
 }
 window.handleClick = handleClick;
@@ -397,10 +522,21 @@ document.getElementById('games-container').addEventListener('scroll', function()
 });
 
 function resetView() {
+    // 1. Show the "Search" view
     document.getElementById('import-view').classList.remove('hidden');
-    document.getElementById('games-list-view').classList.add('hidden');
-    document.getElementById('username-input').value = '';
     document.getElementById('main-header').classList.remove('hidden');
+    
+    // 2. Hide the "List" view
+    document.getElementById('games-list-view').classList.add('hidden');
+    
+    // 3. HIDE THE DASHBOARD (This was missing)
+    document.getElementById('dashboard-view').classList.add('hidden');
+    
+    // 4. Cleanup
+    document.getElementById('username-input').value = '';
+    
+    // Optional: Stop any playing animations if you add them later
+    if(board) board.clear(); 
 }
 
 function resetBtn() {
@@ -429,11 +565,16 @@ let currentMoveIndex = 0;
 
 // Expose controls to window for HTML buttons
 window.boardConfig = {
-    start: () => { currentMoveIndex = 0; updateBoard(); },
-    end: () => { currentMoveIndex = gameHistory.length - 1; updateBoard(); },
-    prev: () => { if (currentMoveIndex > 0) currentMoveIndex--; updateBoard(); },
-    next: () => { if (currentMoveIndex < gameHistory.length - 1) currentMoveIndex++; updateBoard(); },
-    flip: () => { if(board) board.flip(); }
+    start: () => { jumpToMove(0); },
+    end: () => { jumpToMove(gameHistory.length - 1); },
+    prev: () => { if (currentMoveIndex > 0) jumpToMove(currentMoveIndex - 1); },
+    next: () => { if (currentMoveIndex < gameHistory.length - 1) jumpToMove(currentMoveIndex + 1); },
+    flip: () => { 
+        if(board) {
+            board.flip();
+            updatePlayerInfo();
+        }
+    }
 };
 
 function initChessBoard(pgn) {
@@ -470,35 +611,430 @@ function initChessBoard(pgn) {
 
 function updateBoard() {
     if (!gameHistory[currentMoveIndex]) return;
-    board.position(gameHistory[currentMoveIndex]);
+    
+    const fen = gameHistory[currentMoveIndex];
+    board.position(fen);
+    
+    const fenBox = document.getElementById('fen-box');
+    if(fenBox) fenBox.value = fen;
 }
 
 
-function renderDashboard(analysisResults, originalPgn) {
-    // 1. Switch Views
+function renderDashboard(analysisResults, originalPgn, userSide, timeClass) {
+    // A. Switch Views
     document.getElementById('games-list-view').classList.add('hidden');
     document.getElementById('import-view').classList.add('hidden');
     document.getElementById('dashboard-view').classList.remove('hidden');
 
-    // 2. Initialize the Board
-    initChessBoard(originalPgn);
+    // B. Store Data Globally
+    currentAnalysisData = analysisResults.data || [];
 
-    // 3. Log Metrics (As requested)
-    console.log("--- ANALYSIS COMPLETE ---");
-    console.log("Full Results:", analysisResults);
+    // C. Extract Headers & Init Board
+    const headerParser = new Chess();
+    headerParser.load_pgn(originalPgn);
+    gameHeaders = headerParser.header(); 
+
+    initChessBoard(originalPgn);
     
-    // Log just the metrics for easy reading
-    if(analysisResults.data && analysisResults.data.length > 0) {
-        console.table(analysisResults.data.map(m => ({
-            Move: m.move_number,
-            Eval: m.eval,
-            Stress: m.stress,
-            Harmony: m.harmony
-        })));
+    // D. Set Orientation (User Preference)
+    board.orientation(userSide);
+    updatePlayerInfo();
+
+    // E. Update Time Control Box
+    const tcBox = document.getElementById('time-control-box');
+    const tcColorClass = TIME_STYLES[timeClass] || 'text-slate-400';
+    
+    // Reset classes and add new ones
+    tcBox.className = `flex items-center justify-center px-4 rounded-md bg-slate-800 border border-slate-700 font-bold text-xs uppercase tracking-wider ${tcColorClass}`;
+    tcBox.innerText = timeClass || 'Unknown';
+
+    // F. Initial Eval Update
+    updateEvalBox();
+	renderEvalGraph(analysisResults.data);
+	updateAnalysisPanel();
+	
+	renderEvalGraph(analysisResults.data);
+}
+
+
+function copyFen() {
+    const fenBox = document.getElementById('fen-box');
+    fenBox.select();
+    fenBox.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(fenBox.value).then(() => {
+        // Optional visual feedback
+        const btn = fenBox.nextElementSibling;
+        const icon = btn.querySelector('i');
+        icon.classList.remove('fa-copy', 'fa-regular');
+        icon.classList.add('fa-check', 'fa-solid', 'text-green-400');
+        
+        setTimeout(() => {
+            icon.classList.remove('fa-check', 'fa-solid', 'text-green-400');
+            icon.classList.add('fa-copy', 'fa-regular');
+        }, 1500);
+    });
+}
+
+function updateEvalBox() {
+    const box = document.getElementById('eval-box');
+    const data = currentAnalysisData[currentMoveIndex]; // Matches board position
+    
+    if (!data || !data.dynamic || !data.dynamic.top_lines || data.dynamic.top_lines.length === 0) {
+        box.innerText = "-";
+        box.style.backgroundColor = "#475569"; // Slate-600
+        box.style.color = "white";
+        return;
+    }
+
+    const line = data.dynamic.top_lines[0];
+    let score = line.score; 
+    const isMate = line.is_mate;
+
+    // Display Text
+    if (isMate) {
+        box.innerText = `M${Math.abs(score)}`;
+        // Mate: Pure White or Pure Black
+        const isWhiteMate = score > 0;
+        box.style.backgroundColor = isWhiteMate ? "#ffffff" : "#000000";
+        box.style.color = isWhiteMate ? "black" : "white";
+    } else {
+        // Centipawns
+        const displayScore = (score / 100).toFixed(1);
+        box.innerText = displayScore > 0 ? `+${displayScore}` : displayScore;
+
+        // Background Color Logic (correlated to eval)
+        // Range: -300 (Black) <-> 0 (Gray) <-> +300 (White)
+        // Clamp score between -300 and 300 for color calculation
+        const clamped = Math.max(-300, Math.min(300, score));
+        
+        // Map -300..300 to 0..255
+        // -300 -> 0 (Black), 0 -> 128 (Gray), +300 -> 255 (White)
+        const intensity = Math.round(((clamped + 300) / 600) * 255);
+        
+        box.style.backgroundColor = `rgb(${intensity}, ${intensity}, ${intensity})`;
+        
+        // Text Color Contrast (Flip if bg is too light/dark)
+        box.style.color = intensity > 150 ? "black" : "white";
     }
 }
 
 
+function updatePlayerInfo() {
+    if (!board) return;
+
+    const orientation = board.orientation(); // 'white' or 'black'
+    const topEl = document.getElementById('player-top');
+    const botEl = document.getElementById('player-bottom');
+
+    // Helper to generate HTML
+    const getHtml = (name, elo, title) => `
+        <div class="flex items-center gap-3">
+            <div class="font-bold text-white text-lg">${name}</div>
+            <div class="text-slate-500 text-sm font-mono bg-slate-800 px-2 py-0.5 rounded">${elo}</div>
+        </div>
+    `;
+
+    // Defaults
+    const whiteName = gameHeaders.White || 'White';
+    const whiteElo  = gameHeaders.WhiteElo || '?';
+    const blackName = gameHeaders.Black || 'Black';
+    const blackElo  = gameHeaders.BlackElo || '?';
+
+    if (orientation === 'white') {
+        topEl.innerHTML = getHtml(blackName, blackElo);
+        botEl.innerHTML = getHtml(whiteName, whiteElo);
+    } else {
+        topEl.innerHTML = getHtml(whiteName, whiteElo);
+        botEl.innerHTML = getHtml(blackName, blackElo);
+    }
+}
+
+// --- UPDATED: Graph with Black Rectangle (CSS handled) ---
+function renderEvalGraph(analysisData) {
+    const ctx = document.getElementById('evalGraph').getContext('2d');
+
+    const scores = analysisData.map(d => {
+        // New structure: 'eval' is at top level
+        let val = (d.eval || 0) / 100; 
+        
+        // Handle Mate (values > 1000 usually mean mate in X in CP terms)
+        if (Math.abs(val) > 50) { // arbitrary threshold for mate visual clamp
+            val = val > 0 ? 5 : -5;
+        }
+        return Math.max(-5, Math.min(5, val));
+    });
+
+    const labels = analysisData.map((_, i) => i); 
+
+    // 2. Create Gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 128); 
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.85)');   
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0)');    
+    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0)');          
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0.85)');         
+
+    // 3. Destroy old chart
+    if (evalChart) evalChart.destroy();
+
+    // 4. Create Chart
+    evalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Evaluation',
+                    data: scores,
+                    borderColor: '#fbbf24', 
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: {
+                        target: 'origin',
+                        above: gradient,
+                        below: gradient 
+                    }
+                },
+                {
+                    label: 'Current',
+                    data: [{x: 0, y: scores[0]}],
+                    backgroundColor: '#fbbf24',
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 6,
+                    type: 'scatter'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    min: -5,
+                    max: 5,
+                    grid: { display: false },
+                    ticks: { display: false },
+                    border: { display: false } // Hide JS border (handled by CSS)
+                },
+                x: { 
+                    display: false, // Hide X-Axis completely (clean look inside box)
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            onClick: (e) => {
+                const points = evalChart.getElementsAtEventForMode(e, 'nearest', { intersect: false }, true);
+                if (points.length) {
+                    const index = points[0].index;
+                    jumpToMove(index);
+                }
+            }
+        }
+    });
+}
+
+function updateGraphDot(index) {
+    if (!evalChart) return;
+    
+    // Get the score at this index from the main dataset
+    const score = evalChart.data.datasets[0].data[index];
+    
+    // Update the second dataset (the dot)
+    evalChart.data.datasets[1].data = [{ x: index, y: score }];
+    evalChart.update('none'); // 'none' mode prevents full re-animation
+}
+
+function jumpToMove(index) {
+    currentMoveIndex = index;
+    updateBoard();
+    updateEvalBox();
+    updateGraphDot(index);
+	updateAnalysisPanel();
+}
+
+// 2. Main Update Function 
+function updateAnalysisPanel() {
+    const data = currentAnalysisData[currentMoveIndex];
+    if (!data) return;
+
+
+    
+    // Log the features object specifically
+    const featuresObj = data.features || {};
+    // ---------------------
+
+    // A. Update Header 
+    updateHeader(featuresObj); 
+
+    // B. Update Metrics Grids
+    Object.keys(UI_GROUPS).forEach(groupId => {
+        const featureNames = UI_GROUPS[groupId];
+        const container = document.getElementById(groupId);
+        container.innerHTML = ''; 
+
+        featureNames.forEach(featName => {
+            const html = createMetricRow(featName, featuresObj); 
+            container.innerHTML += html;
+        });
+    });
+
+    // C. Update Time/Stress
+    updateTimeAndStress(featuresObj);
+}
+
+// 3. Helper: Create HTML for a Single Metric Row
+function createMetricRow(name, data) {
+    // Safety check: if the metric is missing, default to 0
+    const metric = data[name] || { White: 0, Black: 0, Diff: 0 };
+    
+    let valWhite = metric.White;
+    let valBlack = metric.Black;
+
+    // Handle Perspective Flip for Relative Mode
+    const isWhitePersp = perspective === 'white';
+    
+    // Display Variables
+    let barW_pct = 0;
+    let barB_pct = 0;
+    let textVal = "";
+
+    if (viewMode === 'absolute') {
+        // Absolute: Scale based on typical max values (approx 2.0-3.0 for most metrics)
+        barW_pct = Math.min(100, Math.max(0, valWhite * 40)); // *40 is a heuristic scaling factor
+        barB_pct = Math.min(100, Math.max(0, valBlack * 40));
+        textVal = `${valWhite.toFixed(2)} | ${valBlack.toFixed(2)}`;
+    } else {
+        // Relative: Use the pre-calculated 'Diff' or calc on fly
+        let diff = metric.Diff;
+        if (!isWhitePersp) diff = -diff; // Flip for Black perspective
+
+        textVal = (diff > 0 ? "+" : "") + diff.toFixed(2);
+        
+        // Bar Logic
+        const barSize = Math.min(100, (Math.abs(diff) * 40)); 
+        
+        if (isWhitePersp) {
+            if (diff > 0) barW_pct = barSize; 
+            else barB_pct = barSize;          
+        } else {
+             if (diff > 0) barB_pct = barSize; // User (Black) Adv
+             else barW_pct = barSize;          // Opponent (White) Adv
+        }
+    }
+    
+    // Render
+    return `
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-300 font-bold text-xs w-20 truncate shrink-0 mr-2" title="${name}">${name}</span>
+            <div class="relative flex-1 h-6 bg-slate-800 rounded flex overflow-hidden border border-white/5">
+                <div class="h-full bg-slate-200 transition-all duration-300" style="width: ${barW_pct}%"></div>
+                <div class="h-full bg-black transition-all duration-300" style="width: ${barB_pct}%"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] tracking-wider">
+                        ${textVal}
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/// 4. Helper: Update Header
+function updateHeader(featuresObj) {
+    const moveData = featuresObj.Move || {}; // Now direct access
+    
+    // Move Badge
+    const badge = document.querySelector('.px-3.py-1'); 
+    if(badge) {
+        badge.innerText = moveData.classification || "Analyzing";
+        
+        let color = "text-slate-400 border-slate-500/30 bg-slate-500/20";
+        const cls = (moveData.classification || "").toLowerCase();
+        
+        if(['best', 'great', 'brilliant', 'excellent'].some(x => cls.includes(x))) {
+            color = "text-emerald-400 border-emerald-500/30 bg-emerald-500/20 shadow-[0_0_10px_rgba(52,211,153,0.2)]";
+        } else if(['blunder', 'mistake'].some(x => cls.includes(x))) {
+            color = "text-red-400 border-red-500/30 bg-red-500/20 shadow-[0_0_10px_rgba(248,113,113,0.2)]";
+        } else if(['inaccuracy'].some(x => cls.includes(x))) {
+            color = "text-yellow-400 border-yellow-500/30 bg-yellow-500/20";
+        }
+        
+        badge.className = `px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border transition-all duration-300 ${color}`;
+    }
+
+    // Move Time
+    const timeInfo = featuresObj.Time || {};
+    const timeDisplay = document.querySelector('.text-slate-400.font-mono');
+    if(timeDisplay) {
+        timeDisplay.innerHTML = `<i class="fa-regular fa-clock mr-2"></i>${timeInfo.time_spent || '-'}s`;
+    }
+}
+
+// 5. Helper: Time & Stress
+function updateTimeAndStress(featuresObj) {
+    const timeData = featuresObj.Time || {};
+    
+    // 1. Time Spent
+    document.getElementById('metric-time').innerText = (timeData.time_spent || 0) + 's';
+
+    // 2. Classification
+    const clsEl = document.getElementById('metric-class');
+    clsEl.innerText = timeData.classification || "-";
+    
+    let colorClass = "text-slate-500";
+    const label = (timeData.classification || "").toLowerCase();
+    if (label.includes('optimal') || label.includes('efficient')) colorClass = "text-emerald-400";
+    else if (label.includes('panic') || label.includes('rush') || label.includes('paralysis')) colorClass = "text-red-400";
+    else if (label.includes('thinking')) colorClass = "text-yellow-400";
+    clsEl.className = `text-sm font-bold uppercase tracking-wider ${colorClass}`;
+
+    // 3. Stress
+    const stress = featuresObj.Criticality || 0; 
+    document.getElementById('val-stress').innerText = stress.toFixed(2);
+    document.getElementById('bar-stress').style.width = `${Math.min(100, stress * 100)}%`;
+
+    // 4. Complexity (Visual Bar)
+    const compData = featuresObj.Complexity || {White: 0, Black: 0};
+    const compVal = Math.max(Math.abs(compData.White), Math.abs(compData.Black));
+    
+    // Select the complexity bar (middle item in grid)
+    const compContainer = document.querySelector('#metric-class').parentElement.nextElementSibling.previousElementSibling;
+    if(compContainer) {
+         const compBar = compContainer.querySelector('div > div');
+         if(compBar) compBar.style.width = `${Math.min(100, compVal * 100)}%`;
+    }
+}
+
+// 6. Pre-Calculate Move Times (Call this when loading PGN)
+function parseMoveTimes(pgn) {
+    moveTimes = [];
+    const regex = /\[%clk\s(\d+):(\d+):(\d+)\]/g; // Matches [%clk 0:05:00]
+    // Note: This is complex to do perfectly with Regex on PGN. 
+    // Ideally, use the chess.js header or comment parsing if available.
+    // Fallback: If no clocks, fill with "-".
+    moveTimes = new Array(1000).fill("-"); 
+}
+
+// 7. Toggle Functions (Hook these to your HTML buttons)
+function setViewMode(mode) {
+    viewMode = mode;
+    // Update button styles (visual feedback logic here)
+    updateAnalysisPanel();
+}
+
+function setPerspective(persp) {
+    perspective = persp;
+    updateAnalysisPanel();
+}
 
 </script>
 
