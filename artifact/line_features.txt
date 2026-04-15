@@ -1,0 +1,34 @@
+# Feature Extraction Framework: Level 3 - Line Level (The Trajectory) 
+## Category: The Future Projection 
+
+**Description:** This level extracts features from the engine's Principal Variation (PV). It describes the "character" and stability of the future sequence that justifies the current evaluation.
+
+### 1. PV Character and Topography 
+* **Forcing_Sequence_Length:** Integer - The count of consecutive checks, captures, and forced replies in the PV. High values indicate a "forced" or "linear" line.
+* **Quiet_Move_Depth:** Integer - The ply number where the sequence shifts from forcing moves to "quiet" moves. Indicates the calculation "horizon." 
+* **Evaluation_Volatility:** Float - A measure of how much the engine's score for this move shifted during calculation depth (18 to 24+)[cite: 134]. High volatility indicates a "sharp" or "unstable" evaluation.
+* **Initiative_Span:** Integer - The number of ply the moving player dictates the game with forcing moves or direct threats before the opponent gets a "free" non-forced quiet reply.
+* **Evaluation_Oscillation:** Integer - The number of times the engine's evaluation crosses the 0.0 threshold or changes the favored player during the depth search.
+* **Convergence_Pace:** Integer - The depth at which the evaluation stays within a tight band (e.g., +/- 0.15) of the final terminal evaluation.
+
+### 2. Tactical and Material Dynamics
+* **Tactical_Density:** Float - The frequency of tactical motifs (forks, pins, etc.) occurring within the projected PV sequence.
+* **Simplification_Rate:** Float - The percentage of total board material expected to be traded off by the end of the sequence.
+* **Trade_Balance:** Integer/String - The net material change at the end of the sequence compared to the start (e.g., "+1 Pawn", "-1 Knight").
+
+### 3. Structural and Positional Trajectory
+* **Terminal_Passed_Pawn_Delta:** Integer - The net difference in passed pawns between the current state and the terminal state of the PV.
+* **Terminal_Structure_Degradation:** Integer - The change in pawn structure flaws (e.g., pawn islands, doubled pawns) by the end of the PV sequence.
+* **Positional_Compensation_Index:** Float - The terminal evaluation minus the pure raw material evaluation at the terminal state, measuring non-material compensation.
+
+### 4. Search Meta-Metrics (Engine Confidence)
+* **Selective_Depth_Gap:** Integer - The difference between the engine's baseline depth and its selective depth (seldepth) for this move.
+* **Node_Density:** Float - The total nodes searched to find this specific PV divided by the search depth.
+* **Tablebase_Intersection_Flag:** Boolean - True if the number of pieces on the board at the PV horizon drops to 7 or fewer, signaling the engine has entered solved endgame tablebase territory.
+
+### 5. Terminal State Characteristics 
+* **Horizon_Settlement:** [Resolved, Unresolved] - Indicates if the final position of the PV is "quiet" (no threats) or if the engine reached its limit during a tactical melee.
+* **Terminal_King_Safety_Delta:** Float - The difference in King Safety for the opponent between the current state and the end of the PV[.
+* **Phase_Transition_Flag:** Boolean - True if the PV results in a transition between game phases (e.g., Middlegame to Endgame).
+* **Terminal_King_Exposure_Index:** Integer - Measures whether the enemy king has been drawn out into the open (e.g., Manhattan distance from its starting square) by the end of the calculation.
+* **Perpetual_Check_Risk:** Boolean - Flags if the terminal state or the moves leading up to it involve a repetitive sequence of checks that do not result in mate or material gain.
