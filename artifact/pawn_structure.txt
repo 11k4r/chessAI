@@ -1,0 +1,38 @@
+# Feature Extraction Framework: Level 1 - Position Level (The State)
+## Category: Pawn Structure
+
+**Description:** This category isolates the inherent, physical integrity and deformities of the pawn chains. It strictly measures the skeleton of the board, separate from how those pawns interact with pieces, kings, or territorial control.
+
+### Extracted Features
+
+* **Pawn_Islands:**
+  - Description: The number of disconnected groups of pawns separated by empty files. Fewer islands represent a more structurally sound position.
+  - Data Type: Integer (per player)
+
+* **Passed_Pawn_Count:**
+  - Description: The total number of pawns that have no opposing pawns in front of them or on adjacent files to prevent their advance.
+  - Data Type: Integer (per player)
+
+* **Advanced_Passed_Pawns:**
+  - Description: A weighted count or strict tally of passed pawns that have reached the 5th, 6th, or 7th rank, representing an imminent promotion threat.
+  - Data Type: Integer (per player)
+
+* **Isolated_Pawn_Count:**
+  - Description: The number of pawns lacking friendly pawns on adjacent files, representing static weaknesses requiring piece defense.
+  - Data Type: Integer (per player)
+
+* **Doubled_Pawn_Count:**
+  - Description: The number of pawns sharing a file with another pawn of the same color. 
+  - Data Type: Integer (per player)
+
+* **Backward_Pawn_Count:**
+  - Description: Pawns situated behind their adjacent friendly pawns that cannot safely advance without enemy capture.
+  - Data Type: Integer (per player)
+
+* **Pawn_Chain_Integrity:**
+  - Description: The total number of pawns currently defended by another friendly pawn (e.g., a rigid d4-e5 chain). Measures structural solidity.
+  - Data Type: Integer (per player)
+
+* **Blocked_Pawn_Count:**
+  - Description: The number of pawns whose forward progression is directly blocked by an opposing pawn on the same file (pawn rams). High numbers indicate a closed, locked position.
+  - Data Type: Integer (per player)

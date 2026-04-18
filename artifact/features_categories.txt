@@ -1,0 +1,35 @@
+Stockfish Evaluation Feature Extraction Framework
+
+This framework is designed to extract and categorize features to explain chess move evaluations. It is structured into three fundamental levels—the State, the Action, and the Trajectory—capturing the physical reality of the board, the mechanics of the chosen move, and the engine's projected future.
+
+## 1. Position Level (The State)
+This level represents the static snapshot of the board *before* the move is made. It answers: "What is the current situation?"
+
+* Material Balance: The absolute and relative value of the pieces on the board, including specific combinations (e.g., the bishop pair).
+* Pawn Structure: The configuration, weaknesses, and strengths of the pawn skeletons for both sides.
+* King Safety: The defensive perimeter around the kings and their vulnerability to attack.
+* Piece Activity / Mobility: How effectively the pieces are deployed, their range of movement, and their influence on key squares (e.g., centralization, outposts).
+* Space and Control: The amount of territory each side dictates, particularly control over the center and squares in the opponent's half.
+* Coordination and Connectivity: How well pieces work together, defend one another, and maintain harmony (e.g., connected rooks, overprotected pieces).
+* Static Tension: Pre-existing tactical factors already present on the board before the move is made, such as active pins, x-rays, or pieces currently under attack.
+* Global Context: The irreversible state rules and phase indicators (game phase, castling rights, en passant availability, fifty-move rule).
+* Decision Landscape: The choice architecture and risk profile of the position, including the number of viable moves, the evaluation gap between alternatives, and the overall blunder density.
+
+## 2. Move Level (The Action)
+This level focuses on the transition and the delta. It answers: "What does this specific action change, and how does it compare to the alternatives?"
+
+* Immediate Forcing Events: The direct, physical interactions caused by the move itself (e.g., captures, checks, promotions).
+* Offensive Threat Generation: New problems the move creates for the opponent, including direct attacks, discovered attacks, mating threats, and tactical motifs.
+* Defensive Shifts: How the move alters your own vulnerability, covering newly defended pieces, blocked attacks, but also abandoned squares or pieces left hanging.
+* Positional State Changes: The permanent or semi-permanent structural shifts caused directly by the move (e.g., opening/closing files, creating passed pawns, occupying outposts).
+* Mobility and Restriction Impact: How the move changes the movement potential for both sides, such as increasing a piece's scope, restricting enemy pieces (prophylaxis), or creating/breaking pins.
+* Comparative Value (The Delta): The statistical reality of the move compared to the engine's other options, including the move's rank (PV1, PV2), evaluation drop-off, and alternative viability.
+
+## 3. Line Level (The Trajectory)
+This level analyzes the Principal Variation (PV) calculated by the engine. It answers: "What is the character and trajectory of the sequence that justifies this evaluation?"
+
+* Tactical Density: The concentration of forcing moves within the projected sequence (e.g., frequency of checks, captures, and forced replies).
+* Evaluation Trajectory: How the numerical evaluation behaves across the depth of the line (e.g., wild fluctuations vs. stable convergence).
+* Simplification and Phase Transition: The rate at which material leaves the board, tracking forced piece exchanges or transitions across game phases (e.g., middlegame to endgame).
+* Sequence Topography: The structural shape of the engine's projection, including the absolute length of the PV and the depth of forcing sequences before quiet moves take over.
+* Terminal State Characteristics: The nature of the position at the very end of the calculated line (e.g., a truly resolved, quiet position versus a cutoff point with lingering unresolved tension).

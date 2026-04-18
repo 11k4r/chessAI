@@ -1,0 +1,30 @@
+# Feature Extraction Framework: Level 1 - Position Level (The State)
+## Category: Coordination and Connectivity
+
+**Description:** This category measures the synergy between pieces. It tracks how pieces defend each other, multiply each other's offensive power, or restrict one another.
+
+### Extracted Features
+
+* **Outpost_Synergy:**
+  - Description: The number of minor pieces (Knights/Bishops) occupying outposts. Defined strictly as the synergy between the minor piece and the friendly pawn that anchors it.
+  - Data Type: Integer (per player)
+
+* **Connected_Majors:**
+  - Description: A boolean or count representing Rooks and Queens that directly defend each other on a shared rank or file.
+  - Data Type: Integer (pairs of connected majors)
+
+* **Battery_Formations:**
+  - Description: The count of aligned sliding pieces (Rook+Rook, Queen+Rook, Queen+Bishop) on a single file or diagonal, concentrating force.
+  - Data Type: Integer (number of active batteries)
+
+* **Hanging_Piece_Count:**
+  - Description: The number of active pieces that have exactly 0 friendly defenders. Represents latent tactical vulnerability.
+  - Data Type: Integer (per player)
+
+* **Overprotection_Score:**
+  - Description: The number of redundant defenders supporting a single piece or critical square beyond what is mathematically necessary to defend against current attacks.
+  - Data Type: Integer / Float
+
+* **Piece_Interference:**
+  - Description: A count of instances where a friendly piece blocks the optimal attack ray or movement of another friendly piece (e.g., a Knight blocking a Rook's open file).
+  - Data Type: Integer (instances per player)

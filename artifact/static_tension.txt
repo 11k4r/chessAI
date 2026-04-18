@@ -1,0 +1,34 @@
+# Feature Extraction Framework: Level 1 - Position Level (The State)
+## Category: Static Tension
+
+**Description:** This category measures the unresolved tactical friction, loaded engagements, and pre-existing threats on the board before any move is made. It tracks the "kinetic energy" of the position.
+
+### Extracted Features
+
+* **Capture_Volume:**
+  - Description: The total aggregate number of legal capture moves available in the current position. High values indicate highly complex, volatile tactical states.
+  - Data Type: Integer (per player)
+
+* **Pawn_Tension:**
+  - Description: The number of active pawn-takes-pawn engagements on the board (e.g., d4 vs c5). Used to measure structural instability.
+  - Data Type: Integer (mutual engagements)
+
+* **En_Prise_Targets:**
+  - Description: The number of pieces currently under attack that are either undefended, defended insufficiently (fewer defenders than attackers), or attacked by a lower-value piece.
+  - Data Type: Integer (per player)
+
+* **Relative_Pins:**
+  - Description: The count of sliding pieces pinning an enemy piece to a higher-value enemy piece.
+  - Data Type: Integer (active pins per player)
+
+* **Latent_Discovered_Attacks:**
+  - Description: The number of masked batteries where a piece's attack ray toward an enemy target is temporarily obstructed by a single friendly piece, creating a discovered attack threat.
+  - Data Type: Integer (per player)
+
+* **Non_King_Xrays:**
+  - Description: The count of sliding pieces attacking an enemy target and simultaneously targeting another enemy piece/critical square directly behind it (skewers/x-rays).
+  - Data Type: Integer (per player)
+
+* **Active_Forks_Double_Attacks:**
+  - Description: Instances where a single active piece is simultaneously attacking two or more distinct enemy pieces or critical structural targets.
+  - Data Type: Integer (count of active forks per player)

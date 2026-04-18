@@ -1,0 +1,38 @@
+# Feature Extraction Framework: Level 1 - Position Level (The State)
+## Category: Global Context (Updated)
+
+**Description:** This category captures the overarching, irreversible state rules, phase multipliers, and the "Thematic Anchor" (Opening/Endgame type) of the board.
+
+### Extracted Features
+
+* **Opening_Name:**
+  - Description: The standardized ECO name and code. Acts as a strategic blueprint for the position.
+  - Data Type: String (e.g., "B12: Caro-Kann Defense, Advance Variation")
+
+* **Endgame_Type:**
+  - Description: A specific classification of the material imbalance when the Game Phase is in the endgame.
+  - Data Type: String (e.g., "R+P vs R", "B+N vs K", "Pawn Endgame")
+
+* **Game_Phase_Indicator:**
+  - Description: The current stage of the game, used as a master multiplier for positional evaluation. 
+  - Data Type: Float (0.0 to 1.0) / Categorical (Opening, Middlegame, Endgame)
+
+* **Castling_Rights:**
+  - Description: Four boolean flags representing the legal privilege to castle for each side and flank.
+  - Data Type: Dictionary (WK, WQ, BK, BQ)
+
+* **Halfmove_Clock:**
+  - Description: The number of halfmoves since the last pawn advance or piece capture.
+  - Data Type: Integer (0-100)
+
+* **Repetition_Count:**
+  - Description: A counter tracking how many times the current exact board state has occurred.
+  - Data Type: Integer (1-3)
+
+* **En_Passant_Target:**
+  - Description: The square where an en passant capture is legally possible, or "None".
+  - Data Type: String / None
+
+* **Color_To_Move:**
+  - Description: The binary state of whose turn it is to act.
+  - Data Type: Categorical (White, Black)
